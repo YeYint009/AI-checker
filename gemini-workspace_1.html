@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gemini Workspace</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #0f0f11;
+  --bg2:     #17171b;
+  --bg3:     #1e1e24;
+  --bg4:     #25252d;
+  --border:  rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text:    #e8e8ec;
+  --text2:   #9090a0;
+  --text3:   #55556a;
+  --accent:  #7c6af7;
+  --accent-d:rgba(124,106,247,0.15);
+  --green:   #3ecf8e;
+  --green-d: rgba(62,207,142,0.1);
+  --amber:   #f5a524;
+  --amber-d: rgba(245,165,36,0.1);
+  --red:     #f87171;
+  --red-d:   rgba(248,113,113,0.1);
+  --blue:    #60a5fa;
+  --blue-d:  rgba(96,165,250,0.1);
+  --r:       10px;
+  --r-sm:    6px;
+}
+html { font-size: 15px; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+.app { max-width: 960px; margin: 0 auto; padding: 28px 20px 80px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Header */
+.header { display: flex; align-items: center; gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.logo { width: 30px; height: 30px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+.header-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.badge { font-size: 11px; color: var(--text3); background: var(--bg3); padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); white-space: nowrap; }
+
+/* Card */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.card-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.card-icon { font-size: 15px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border-radius: var(--r-sm); border: 1px solid var(--border); flex-shrink: 0; }
+.card-header h2 { font-size: 13px; font-weight: 600; }
+.card-header .hint { margin-left: auto; font-size: 11px; color: var(--text3); }
+.card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+/* API Key */
+.api-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); }
+.api-label { font-size: 12px; color: var(--text2); white-space: nowrap; font-weight: 500; }
+#apikey { flex: 1; background: transparent; border: none; outline: none; font-size: 13px; color: var(--text); font-family: monospace; }
+#apikey::placeholder { color: var(--text3); font-family: -apple-system, sans-serif; }
+.icon-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 3px; border-radius: 4px; display: flex; transition: color 0.1s; }
+.icon-btn:hover { color: var(--text2); }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: all 0.2s; }
+.status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* Field label */
+.field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 6px; }
+.ctx-action-btn { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:4px 10px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--bg3); color:var(--text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.ctx-action-btn:hover { background:var(--bg4); color:var(--text); }
+.ctx-action-btn.danger { color:var(--red); border-color:var(--red); background:var(--red-d); }
+.ctx-action-btn.danger:hover { opacity:0.8; }
+
+/* Textarea */
+textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 12.5px; line-height: 1.6; padding: 10px 12px; resize: vertical; font-family: inherit; outline: none; transition: border-color 0.15s; }
+textarea:focus { border-color: var(--border2); }
+textarea::placeholder { color: var(--text3); }
+
+/* Context grid */
+.ctx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .ctx-grid { grid-template-columns: 1fr; } }
+.url-row { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); }
+.url-row label { font-size:11px; font-weight:600; color:var(--text3); white-space:nowrap; letter-spacing:0.04em; }
+.url-row input { flex:1; background:transparent; border:none; outline:none; font-size:12px; color:var(--accent); font-family:monospace; min-width:0; }
+.url-row input::placeholder { color:var(--text3); font-family:-apple-system,sans-serif; font-size:11.5px; }
+.url-row a { font-size:11px; color:var(--accent); text-decoration:none; white-space:nowrap; flex-shrink:0; opacity:0.8; }
+.url-row a:hover { opacity:1; }
+.sheet-row { display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); margin-top:8px; }
+.sheet-row label { font-size:11px; font-weight:600; color:var(--text3); white-space:nowrap; }
+.sheet-row select { flex:1; background:var(--bg3); border:none; outline:none; font-size:12px; color:var(--text); min-width:0; cursor:pointer; }
+.sheet-row select option { background:var(--bg2); }
+.sheet-fetch-btn { font-size:11px; font-weight:600; padding:3px 10px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--bg2); color:var(--text2); cursor:pointer; white-space:nowrap; transition:all 0.15s; }
+.sheet-fetch-btn:hover { background:var(--bg4); color:var(--text); }
+.sheet-status { font-size:11px; white-space:nowrap; }
+.sheet-status.ok { color:var(--green); }
+.sheet-status.err { color:var(--red); }
+.sheet-status.loading { color:var(--amber); }
+.batch-timer { font-size:12px; font-weight:600; color:var(--text2); font-family:monospace; }
+.file-timer { font-size:10px; color:var(--text3); margin-left:2px; }
+
+/* Drop zone */
+.drop-area { border: 1.5px dashed var(--border2); border-radius: var(--r); padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.15s; background: var(--bg3); }
+.drop-area:hover, .drop-area.drag-over { border-color: var(--accent); background: var(--accent-d); }
+.drop-area svg { color: var(--text3); display: block; margin: 0 auto 10px; }
+.drop-area p { font-size: 13px; color: var(--text2); }
+.drop-area span { font-size: 11px; color: var(--text3); }
+input[type="file"] { display: none; }
+
+/* Queue item */
+.queue { display: flex; flex-direction: column; gap: 8px; }
+.queue-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); transition: border-color 0.2s; }
+.queue-item.running  { border-color: var(--amber); }
+.queue-item.done     { border-color: var(--green); }
+.queue-item.error    { border-color: var(--red); }
+.queue-item.stopped  { border-color: var(--red); opacity: 0.6; }
+.queue-item.paused   { border-color: var(--blue); }
+.qi-icon { font-size: 14px; flex-shrink: 0; }
+.qi-name { font-size: 12.5px; font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qi-size { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.qi-status { font-size: 11px; font-weight: 600; white-space: nowrap; padding: 2px 8px; border-radius: 20px; }
+.qi-status.pending  { color: var(--text3);  background: var(--bg4); }
+.qi-status.running  { color: var(--amber);  background: var(--amber-d); }
+.qi-status.done     { color: var(--green);  background: var(--green-d); }
+.qi-status.error    { color: var(--red);    background: var(--red-d); }
+.qi-status.stopped  { color: var(--red);    background: var(--red-d); }
+.qi-status.paused   { color: var(--blue);   background: var(--blue-d); }
+.qi-remove { background: none; border: none; cursor: pointer; color: var(--text3); padding: 3px; border-radius: 4px; display: flex; }
+.qi-remove:hover { color: var(--red); }
+
+/* Progress */
+.progress-wrap { display: none; flex-direction: column; gap: 6px; }
+.progress-wrap.visible { display: flex; }
+.progress-bar-bg { width: 100%; height: 4px; background: var(--bg3); border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.progress-bar-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.3s; }
+.progress-bar-fill.paused { background: var(--blue); }
+.progress-bar-fill.stopped { background: var(--red); }
+.progress-text { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+.progress-badge { font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
+.progress-badge.running { color: var(--amber); background: var(--amber-d); }
+.progress-badge.paused  { color: var(--blue);  background: var(--blue-d); }
+.progress-badge.stopped { color: var(--red);   background: var(--red-d); }
+.progress-badge.done    { color: var(--green); background: var(--green-d); }
+
+/* Button row */
+.btn-row { display: flex; gap: 8px; }
+.run-btn { flex: 1; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.15s, transform 0.1s; letter-spacing: -0.01em; }
+.run-btn:hover { opacity: 0.88; }
+.run-btn:active { transform: scale(0.99); }
+.run-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+.ctrl-btn { padding: 11px 16px; border: 1px solid var(--border2); border-radius: var(--r); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; white-space: nowrap; background: var(--bg3); color: var(--text2); }
+.ctrl-btn:hover { background: var(--bg4); color: var(--text); }
+.ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ctrl-btn.pause-btn  { color: var(--blue);  border-color: var(--blue); background: var(--blue-d); }
+.ctrl-btn.resume-btn { color: var(--green); border-color: var(--green); background: var(--green-d); }
+.ctrl-btn.stop-btn   { color: var(--red);   border-color: var(--red);  background: var(--red-d); }
+.ctrl-btn.pause-btn:hover  { opacity: 0.8; }
+.ctrl-btn.resume-btn:hover { opacity: 0.8; }
+.ctrl-btn.stop-btn:hover   { opacity: 0.8; }
+
+/* Spinner */
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25); border-top-color: #fff; border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results */
+.results-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.results-top h2 { font-size: 14px; font-weight: 600; }
+.save-btn { font-size: 12px; padding: 6px 14px; border-radius: var(--r-sm); border: 1px solid var(--border2); background: var(--bg3); color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: background 0.1s; white-space: nowrap; }
+.save-btn:hover { background: var(--bg4); color: var(--text); }
+.results-list { display: flex; flex-direction: column; gap: 12px; }
+
+/* Result card */
+.result-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.result-card-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.result-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.result-dot.done    { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.result-dot.error   { background: var(--red);   box-shadow: 0 0 5px var(--red); }
+.result-dot.stopped { background: var(--red);   opacity: 0.5; }
+.result-dot.running { background: var(--amber); box-shadow: 0 0 5px var(--amber); animation: pulse 1s ease-in-out infinite; }
+.result-dot.paused  { background: var(--blue);  box-shadow: 0 0 5px var(--blue); animation: pulse 1s ease-in-out infinite; }
+.result-dot.pending { background: var(--text3); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.result-filename { font-size: 12.5px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.result-type-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+.result-type-badge.html { background: rgba(124,106,247,0.15); color: var(--accent); }
+.result-type-badge.img  { background: rgba(62,207,142,0.12); color: var(--green); }
+.result-time { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.copy-btn { font-size: 11px; padding: 3px 10px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; transition: background 0.1s; white-space: nowrap; }
+.copy-btn:hover { background: var(--bg4); color: var(--text); }
+.dl-result-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.1s; flex-shrink: 0; }
+.dl-result-btn:hover { color: var(--accent); }
+.export-wrap { position: relative; }
+.export-btn { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:var(--r-sm); border:1px solid var(--border2); background:var(--bg3); color:var(--text2); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.export-btn:hover { background:var(--bg4); color:var(--accent); border-color:var(--accent); }
+.export-menu { position:absolute; right:0; top:calc(100% + 4px); background:var(--bg2); border:1px solid var(--border2); border-radius:var(--r); overflow:hidden; z-index:100; min-width:160px; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.export-menu button { display:flex; align-items:center; gap:8px; width:100%; padding:9px 14px; font-size:12px; color:var(--text2); background:none; border:none; cursor:pointer; text-align:left; transition:background 0.1s; }
+.export-menu button:hover { background:var(--bg3); color:var(--text); }
+.export-menu button + button { border-top:1px solid var(--border); }
+.export-success { padding:10px 16px; font-size:12px; color:var(--green); background:var(--green-d); border-top:1px solid var(--border); }
+.export-success a { color:var(--green); font-weight:600; }
+.del-result-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.1s; flex-shrink: 0; }
+.del-result-btn:hover { color: var(--red); }
+.copy-btn:hover { background: var(--bg4); color: var(--text); }
+.result-body { padding: 16px; font-size: 13px; line-height: 1.75; color: var(--text); max-height: 480px; overflow-y: auto; }
+.result-body table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 12.5px; }
+.result-body th { background: var(--bg3); color: var(--text2); font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid var(--border2); }
+.result-body td { padding: 8px 12px; border: 1px solid var(--border); vertical-align: top; line-height: 1.6; }
+.result-body tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+.result-body p { margin: 6px 0; }
+.result-body h1,.result-body h2,.result-body h3 { font-size: 13px; font-weight: 600; margin: 10px 0 4px; color: var(--text); }
+.result-body ul,.result-body ol { margin: 6px 0 6px 18px; }
+.result-body li { margin: 3px 0; }
+.result-body code { font-family: monospace; background: var(--bg3); padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+.result-body strong { font-weight: 600; color: var(--text); }
+.result-body.error   { color: var(--red); }
+.result-body.stopped { color: var(--text3); font-style: italic; }
+.result-body.loading { color: var(--text3); font-style: italic; }
+.result-body.paused  { color: var(--blue); font-style: italic; }
+
+/* Divider between batches */
+.batch-divider { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
+.batch-divider span { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.batch-divider::before, .batch-divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+@media (max-width: 600px) { .app { padding: 16px 12px 60px; } .btn-row { flex-wrap: wrap; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">✦</div>
+    <h1>Gemini Workspace</h1>
+    <div class="header-meta">
+      <span class="badge" id="queue-count">0 files</span>
+      <select id="model-select" style="font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;outline:none;cursor:pointer;">
+        <option value="gemini-2.5-flash">gemini-2.5-flash ✦ free</option>
+        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite ✦ free</option>
+        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">🔑</div>
+      <h2>API key</h2>
+      <span class="hint"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);text-decoration:none;">Get free key ↗</a></span>
+    </div>
+    <div class="card-body">
+      <div class="api-row">
+        <span class="api-label">Gemini API key</span>
+        <input type="password" id="apikey" placeholder="Paste your AIza… key here" oninput="checkKey()" />
+        <button class="icon-btn" onclick="toggleKey()" title="Show/hide">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <div class="status-dot" id="api-dot"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contexts -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">💬</div>
+      <h2>System context</h2>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <span class="ctx-saved-badge" id="ctx-saved-badge" style="display:none;font-size:11px;color:var(--green);background:var(--green-d);padding:2px 8px;border-radius:20px;">Saved</span>
+        <button class="ctx-action-btn" onclick="saveContexts()" title="Save to browser (persists on reload)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+        <button class="ctx-action-btn" onclick="exportContexts()" title="Download as .json file">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+        <button class="ctx-action-btn" onclick="document.getElementById('ctx-import-input').click()" title="Load from .json file">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import
+        </button>
+        <button class="ctx-action-btn danger" onclick="resetContexts()" title="Reset to default">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Reset
+        </button>
+        <input type="file" id="ctx-import-input" accept=".json" style="display:none" onchange="importContexts(event)" />
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="url-row">
+        <label>SHEET URL</label>
+        <input type="url" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." oninput="saveSheetUrl()" />
+        <a id="sheet-url-link" href="#" target="_blank" style="display:none">Open ↗</a>
+        <button class="sheet-fetch-btn" onclick="connectSheet()">Connect</button>
+      </div>
+      <div class="sheet-row" id="sheet-tab-row" style="display:none">
+        <label>CUSTOMER TAB</label>
+        <select id="sheet-tab-select" onchange="onTabChange()">
+          <option value="">— select tab —</option>
+        </select>
+        <span class="sheet-status" id="sheet-status"></span>
+      </div>
+      <div class="ctx-grid">
+        <div>
+          <div class="field-label">HTML context</div>
+          <textarea id="html-ctx" rows="6">顧客のサイト作成を行っています。
+サイトに不備がないようにしたいです。
+htmlファイルを送るので、このhtmlファイルをチェックしてください。
+チェックの対象はこのhtmlファイル1つだけにしてください。
+修正すべき点があれば、その箇所を具体的に提示し、必ず表形式でまとめてください。
+提示する修正点は今回のhtmlに含まれるものだけにしてください。
+問題がなければ「問題なし」と一言だけ返してください。
+
+# 制作コンセプトシート（「新制作コンセプトシート」のタブのみ参照してください）
+- {SHEET_URL}
+
+# チェック内容
+- 「サンプルテキスト」などのサンプルが残っていないか
+- 文章の内容に「制作コンセプトシート」との相違はないか
+- 会社名や会社住所等の会社に関わる重要な情報に誤りはないか
+- 会社の商圏（エリア）とページの内容に相違はないか
+- 誤字・脱字はないか
+- 表記揺れはないか（例：「お問い合わせ」「お問合せ」、「お見積もり」「お見積り」「お見積」）
+- 外部サイトへのリンクのtarget属性は"_blank"となっているか
+- 日本語が自然的に書かれているか
+- altに不適切な名前が入っていないか
+
+# 出力形式
+修正点がある場合は以下の表形式で出力してください：
+| # | 箇所 | 問題内容 | 修正案 |
+|---|------|----------|--------|</textarea>
+        </div>
+        <div>
+          <div class="field-label">Image context</div>
+          <textarea id="img-ctx" rows="6">顧客のサイト作成を行っています。
+サイトに不備がないようにしたいです。
+ページのキャプチャを送るので、このキャプチャのチェックをしてください。
+チェックの対象はこのキャプチャ1つだけにしてください。
+修正すべき点があれば、その箇所を具体的に提示し、表形式でまとめてください。
+提示する修正点は今回のキャプチャに含まれるものだけにしてください。
+
+# 制作コンセプトシート
+{SHEET_URL}
+
+# チェック内容
+- 画像がテキストの内容に合っているか
+- 「制作コンセプトシート」のデザインコンセプトと合致しているか
+- 単語の途中で見出しを改行している、文節の途中で見出しを改行しているものはないか
+- 「画像のチェックポイント」と照らし合わせ、基準に適った画像が使用されているか
+
+# 画像のチェックポイント
+
+## ボケていない
+- ボケている画像はNG
+
+## 人の顔が切れている
+- 人の顔が途中で切れている、文字と顔が重なっている画像はNGです。
+
+## イラストのテイストがあっているか
+1つのセクション内でイラストを複数使用している場合、そのイラストのテイストがバラバラなのはNG。
+
+## AI生成で変になっている・AIっぽくて違和感
+- 手が変なところにあるなどのAI生成によって変になっている画像はNG
+- いかにもAIで生成した違和感のある画像はNGです。
+
+## エリアと写真があっていない
+- 雪が降らないエリアなのに、外が雪景色の写真となっているなどはNG
+- エリアと写真は一致している必要があります。写真を見てエリアを想起させる画像にしましょう。
+
+## 文章と画像が一致しているか
+- 文章と画像が一致していないのはNG。
+
+## 誤解の余地がないこと
+- 100人が見て、100人が誤解余地なく認識できることが必須です
+例）高校生が対象の塾のサイトの場合、中学生に見える人の画像はNG
+
+### ポジティブかネガティブか
+文章の内容がポジティブな内容かネガティブな内容かによって、画像もそれに対応したものにする必要があります。
+
+#### 例
+- お困りごとについて書かれた文章の画像は、困っている人の写真
+- お困りごとが解決した後についての文章の画像は、快適そうにしている・喜んでいる人の写真
+
+画像に対応する文章がポジティブな内容なのに、写真から暗い雰囲気がするのはNGです。
+
+### 閲覧者が主題となるか、会社（従業員・サービス・商品）が主題となるか
+
+文章が顧客の悩みや顧客が得るベネフィットなど、顧客の状態に関わる内容の場合は、閲覧者（サイトをもつ会社にとっての顧客）が画像の主題になっている必要があります。
+文章が会社の商品やサービスの訴求・紹介や会社の紹介である場合、会社側（従業員・サービス・商品）が画像の主題になっている必要があります。
+
+### フローなどの起承転結がある場合、それに沿った画像にする
+
+フローやケーススタディなどは起承転結（ストーリー）を持ちます。それにそった画像の配置になっている必要があります。
+
+#### 例
+最初は人が困っているが、次に解決策があり、それによって最後にハッピーになる
+
+1枚だけあまりにドラマティックとなっているなどはNG。一連の画像の連続が違和感ないことが重要です。
+
+## 対象顧客と画像が一致しているか
+対象の顧客と画像の主題は一致している必要があります。
+
+### NG例
+- 対象の顧客が女性なのに、男性になっている
+- 日本人対象の場合、欧米の人が対象になっている
+- スーツを着た人がいいのか、そうじゃない人がいいのか
+
+## 図解の場合文字化けしていないか・視認性は担保されているか
+- 図解の文字化けはNG
+- 文字がしっかり視認できないのはNG
+
+## 他社のロゴが写り込んでいないか
+- 他社のロゴが写りこんでいるのはNG
+
+## SNSアイコンのサイズ
+- スマホ時にアイコンの大きさは40px、周りの余白が20px以上であることが必要
+
+## カラーが全体と調和しているか
+- 図解の場合、そのカラーがサイト全体の色から大きく外れているものはNG
+
+## 会社名・サービス名が正しいか
+図解の会社名・サービス名が「制作コンセプトシート」と異なっているのはNG
+
+# 出力形式
+修正点がある場合は以下の表形式で出力してください：
+| # | 箇所 | 問題内容 | 修正案 |
+|---|------|----------|--------|
+問題がなければ「問題なし」と一言だけ返してください。</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File upload -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon">📂</div>
+      <h2>Files</h2>
+      <span class="hint">drop anytime — even while running</span>
+    </div>
+    <div class="card-body">
+      <div class="drop-area" id="drop-zone"
+        onclick="handleDropZoneClick(event)"
+        ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        <p>Drop files here or click to browse</p>
+        <span>HTML + images (.jpg .png .webp .gif) — multiple ok</span>
+      </div>
+      <input type="file" id="file-input" multiple accept=".html,.htm,image/*" onchange="addFiles(event)" />
+
+      <div class="queue" id="file-queue"></div>
+
+      <!-- Progress -->
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-text">
+          <span id="progress-text">0 / 0 done</span>
+          <span class="progress-badge" id="progress-badge" style="display:none"></span>
+          <span class="batch-timer" id="batch-timer" style="display:none"></span>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="btn-row" id="btn-row">
+        <button class="run-btn" id="run-btn" onclick="runPending()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run all
+        </button>
+        <button class="ctrl-btn pause-btn" id="pause-btn" onclick="togglePause()" style="display:none">
+          <svg id="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span id="pause-label">Pause</span>
+        </button>
+        <button class="ctrl-btn stop-btn" id="stop-btn" onclick="stopAll()" style="display:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" style="display:none; flex-direction:column; gap:14px;">
+    <div class="results-top">
+      <h2>Results</h2>
+      <button class="save-btn" onclick="saveMarkdown()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Save all as Markdown
+      </button>
+    </div>
+    <div class="results-list" id="results-list"></div>
+  </div>
+
+</div>
+<script>
+// ── State ──────────────────────────────────────────────
+let files = [];          // all queued file entries
+let results = {};        // id → result object
+let idCounter = 0;
+let batchCounter = 0;
+
+// Run control
+let activeControllers = {};  // id → AbortController
+let isPaused = false;
+let isStopped = false;
+let pauseResolvers = [];      // resolve fns waiting for resume
+let activeBatch = null;       // track current batch promise
+
+// Timer state
+let batchStartTime = null;
+let batchTimerInterval = null;
+let fileStartTimes = {};      // id → Date.now()
+
+// Sheet data state
+let sheetCustomerData = null; // fetched customer data string
+
+// ── API key ────────────────────────────────────────────
+function checkKey() {
+  document.getElementById('api-dot').classList.toggle('ok', document.getElementById('apikey').value.trim().length > 10);
+}
+function toggleKey() {
+  const el = document.getElementById('apikey');
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+// ── File helpers ───────────────────────────────────────
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+function isHtml(f) { return /\.html?$/i.test(f.name) || f.type.includes('html'); }
+function isImg(f)  { return f.type.startsWith('image/'); }
+
+// ── Add files ──────────────────────────────────────────
+function addFiles(e) {
+  processFileList(Array.from(e.target.files));
+  e.target.value = '';
+}
+var _isDragging = false;
+function handleDropZoneClick(e) {
+  if (_isDragging) { _isDragging = false; return; }
+  document.getElementById('file-input').click();
+}
+function onDragOver(e) {
+  e.preventDefault(); e.stopPropagation();
+  _isDragging = true;
+  document.getElementById('drop-zone').classList.add('drag-over');
+}
+function onDragLeave(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  setTimeout(() => { _isDragging = false; }, 100);
+}
+function onDrop(e) {
+  e.preventDefault(); e.stopPropagation();
+  _isDragging = true;
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const dropped = Array.from(e.dataTransfer.files);
+  if (dropped.length) processFileList(dropped);
+  setTimeout(() => { _isDragging = false; }, 200);
+}
+
+function processFileList(rawFiles) {
+  const valid = rawFiles.filter(f => isHtml(f) || isImg(f));
+  if (!valid.length) return;
+  const batchId = ++batchCounter;
+  valid.forEach(f => {
+    const id = ++idCounter;
+    const entry = { id, batchId, name: f.name, size: f.size, type: isHtml(f) ? 'html' : 'img', rawText: null, b64: null, mime: f.type, status: 'pending' };
+    files.push(entry);
+    if (entry.type === 'html') {
+      const r = new FileReader(); r.onload = ev => { entry.rawText = ev.target.result; }; r.readAsText(f);
+    } else {
+      const r = new FileReader(); r.onload = ev => { const d = ev.target.result; entry.b64 = d.split(',')[1]; entry.mime = f.type || 'image/jpeg'; }; r.readAsDataURL(f);
+    }
+  });
+  renderQueue();
+  // If not currently running, show run button hint
+  updateRunBtn();
+}
+
+function removeFile(id) {
+  if (activeControllers[id]) { activeControllers[id].abort(); delete activeControllers[id]; }
+  files = files.filter(f => f.id !== id);
+  delete results[id];
+  renderQueue();
+  if (!files.length) hideControls();
+  refreshResultsSection();
+}
+
+// ── Render queue ───────────────────────────────────────
+function renderQueue() {
+  const el = document.getElementById('file-queue');
+  el.innerHTML = '';
+  let lastBatch = null;
+  files.forEach(f => {
+    if (f.batchId !== lastBatch) {
+      if (lastBatch !== null) {
+        const div = document.createElement('div');
+        div.className = 'batch-divider';
+        div.innerHTML = '<span>batch ' + f.batchId + '</span>';
+        el.appendChild(div);
+      }
+      lastBatch = f.batchId;
+    }
+    const sc = f.status || 'pending';
+    const sl = { pending:'Pending', running:'Running…', done:'Done', error:'Error', stopped:'Stopped', paused:'Paused' }[sc] || sc;
+    const canRemove = sc !== 'running';
+    const div = document.createElement('div');
+    div.className = 'queue-item ' + sc;
+    div.id = 'qi-' + f.id;
+    div.innerHTML =
+      '<span class="qi-icon">' + (f.type==='html'?'📄':'🖼️') + '</span>' +
+      '<span class="qi-name" title="'+f.name+'">'+f.name+'</span>' +
+      '<span class="qi-size">'+fmtSize(f.size)+'</span>' +
+      '<span class="qi-status '+sc+'">'+sl+'</span>' +
+      (canRemove ? '<button class="qi-remove" onclick="removeFile('+f.id+')" title="Remove"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' : '');
+    el.appendChild(div);
+  });
+  document.getElementById('queue-count').textContent = files.length + ' file' + (files.length !== 1 ? 's' : '');
+}
+
+function setFileStatus(id, status) {
+  const f = files.find(f => f.id === id);
+  if (f) f.status = status;
+  const item = document.getElementById('qi-' + id);
+  if (!item) return;
+  item.className = 'queue-item ' + status;
+  const b = item.querySelector('.qi-status');
+  if (b) { b.className = 'qi-status ' + status; b.textContent = {pending:'Pending',running:'Running…',done:'Done',error:'Error',stopped:'Stopped',paused:'Paused'}[status]||status; }
+  // hide remove btn while running
+  const rm = item.querySelector('.qi-remove');
+  if (rm) rm.style.display = status === 'running' ? 'none' : '';
+}
+
+// ── Run controls ───────────────────────────────────────
+function updateRunBtn() {
+  const pending = files.filter(f => f.status === 'pending');
+  const isRunning = Object.keys(activeControllers).length > 0;
+  const runBtn = document.getElementById('run-btn');
+  if (pending.length > 0 && !isRunning) {
+    runBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run ' + pending.length + ' pending';
+    runBtn.disabled = false;
+  } else if (isRunning) {
+    runBtn.innerHTML = '<div class="spinner"></div> Running…';
+    runBtn.disabled = true;
+  } else {
+    runBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run all';
+    runBtn.disabled = !files.length;
+  }
+}
+
+function showControls() {
+  document.getElementById('pause-btn').style.display = '';
+  document.getElementById('stop-btn').style.display = '';
+  document.getElementById('progress-wrap').classList.add('visible');
+}
+function hideControls() {
+  document.getElementById('pause-btn').style.display = 'none';
+  document.getElementById('stop-btn').style.display = 'none';
+}
+
+async function runPending() {
+  const key = document.getElementById('apikey').value.trim();
+  if (!key) { alert('Please paste your Gemini API key first.'); return; }
+  const pending = files.filter(f => f.status === 'pending');
+  if (!pending.length) { alert('No pending files to run.'); return; }
+
+  isPaused = false;
+  isStopped = false;
+  showControls();
+  setPauseUI(false);
+  document.getElementById('results-section').style.display = 'flex';
+  pending.forEach(f => { if (!document.getElementById('rc-'+f.id)) createResultCard(f); });
+  updateProgress();
+  updateRunBtn();
+
+  // Start batch timer
+  startBatchTimer();
+
+  await Promise.all(pending.map(f => processFile(f, key)));
+
+  updateRunBtn();
+  const stillRunning = Object.keys(activeControllers).length > 0;
+  if (!stillRunning) { hideControls(); stopBatchTimer(); }
+  updateProgress();
+}
+
+async function processFile(f, key) {
+  // Wait for file data to load
+  await waitForData(f);
+
+  // Check stop before starting
+  if (isStopped) { setFileStatus(f.id, 'stopped'); setResultDot(f.id, 'stopped'); setResultBody(f.id, 'Stopped before running.', 'stopped'); updateProgress(); return; }
+
+  // Wait if paused
+  await waitIfPaused(f.id);
+
+  // Check stop again after unpause
+  if (isStopped) { setFileStatus(f.id, 'stopped'); setResultDot(f.id, 'stopped'); setResultBody(f.id, 'Stopped.', 'stopped'); updateProgress(); return; }
+
+  const controller = new AbortController();
+  activeControllers[f.id] = controller;
+  fileStartTimes[f.id] = Date.now();
+  setFileStatus(f.id, 'running');
+  setResultDot(f.id, 'running');
+  updateRunBtn();
+
+  try {
+    const text = await callGemini(f, key, controller.signal);
+    const t = new Date().toLocaleTimeString();
+    results[f.id] = { text, isErr: false, time: t };
+    setResultBody(f.id, text, false, t);
+    setFileStatus(f.id, 'done');
+    setResultDot(f.id, 'done');
+  } catch(e) {
+    if (e.name === 'AbortError' || isStopped) {
+      results[f.id] = { text: 'Stopped.', isErr: false, time: '' };
+      setResultBody(f.id, 'Stopped by user.', 'stopped');
+      setFileStatus(f.id, 'stopped');
+      setResultDot(f.id, 'stopped');
+    } else {
+      const t = new Date().toLocaleTimeString();
+      const elapsed = fileStartTimes[f.id] ? ((Date.now() - fileStartTimes[f.id]) / 1000).toFixed(1) + 's' : '';
+      results[f.id] = { text: e.message, isErr: true, time: t, elapsed };
+      setResultBody(f.id, e.message, 'error', t, elapsed);
+      setFileStatus(f.id, 'error');
+      setResultDot(f.id, 'error');
+    }
+  } finally {
+    delete activeControllers[f.id];
+    updateProgress();
+    updateRunBtn();
+  }
+}
+
+// ── Pause / Resume ─────────────────────────────────────
+function togglePause() {
+  if (isPaused) resumeAll(); else pauseAll();
+}
+
+function pauseAll() {
+  isPaused = true;
+  setPauseUI(true);
+  // Mark pending files as paused
+  files.filter(f => f.status === 'pending').forEach(f => { setFileStatus(f.id, 'paused'); setResultDot(f.id, 'paused'); setResultBody(f.id, 'Paused — waiting to resume…', 'paused'); });
+  updateProgress();
+}
+
+function resumeAll() {
+  isPaused = false;
+  setPauseUI(false);
+  // Reset paused files back to pending
+  files.filter(f => f.status === 'paused').forEach(f => { setFileStatus(f.id, 'pending'); setResultDot(f.id, 'pending'); setResultBody(f.id, 'Waiting for Gemini…', 'loading'); });
+  // Resolve all pause waiters
+  pauseResolvers.forEach(r => r());
+  pauseResolvers = [];
+  updateProgress();
+}
+
+function setPauseUI(paused) {
+  const btn = document.getElementById('pause-btn');
+  const icon = document.getElementById('pause-icon');
+  const label = document.getElementById('pause-label');
+  if (paused) {
+    btn.className = 'ctrl-btn resume-btn';
+    icon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+    label.textContent = 'Resume';
+  } else {
+    btn.className = 'ctrl-btn pause-btn';
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    label.textContent = 'Pause';
+  }
+}
+
+function waitIfPaused(fileId) {
+  if (!isPaused) return Promise.resolve();
+  setFileStatus(fileId, 'paused');
+  return new Promise(resolve => { pauseResolvers.push(resolve); });
+}
+
+// ── Stop ───────────────────────────────────────────────
+function stopAll() {
+  isStopped = true;
+  isPaused = false;
+  // Abort all active requests
+  Object.values(activeControllers).forEach(c => c.abort());
+  // Resolve pause waiters so they can exit
+  pauseResolvers.forEach(r => r());
+  pauseResolvers = [];
+  // Mark all non-finished as stopped
+  files.forEach(f => {
+    if (['pending','paused','running'].includes(f.status)) {
+      setFileStatus(f.id, 'stopped');
+      setResultDot(f.id, 'stopped');
+      if (document.getElementById('rbody-'+f.id)) setResultBody(f.id, 'Stopped by user.', 'stopped');
+    }
+  });
+  hideControls();
+  stopBatchTimer();
+  updateRunBtn();
+  updateProgress();
+}
+
+// ── Progress ───────────────────────────────────────────
+function updateProgress() {
+  const total = files.length;
+  const done  = files.filter(f => ['done','error','stopped'].includes(f.status)).length;
+  const running = files.filter(f => f.status === 'running').length;
+  const paused  = files.filter(f => f.status === 'paused').length;
+  const pct = total === 0 ? 0 : Math.round(done / total * 100);
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = pct + '%';
+  fill.className = 'progress-bar-fill' + (isPaused ? ' paused' : isStopped ? ' stopped' : '');
+  document.getElementById('progress-text').textContent = done + ' / ' + total + ' done';
+  const badge = document.getElementById('progress-badge');
+  if (running > 0) { badge.style.display=''; badge.className='progress-badge running'; badge.textContent=running+' running'; }
+  else if (paused > 0) { badge.style.display=''; badge.className='progress-badge paused'; badge.textContent=paused+' paused'; }
+  else if (isStopped) { badge.style.display=''; badge.className='progress-badge stopped'; badge.textContent='stopped'; }
+  else if (total > 0 && done === total) { badge.style.display=''; badge.className='progress-badge done'; badge.textContent='all done'; }
+  else { badge.style.display='none'; }
+}
+
+// ── Gemini call ────────────────────────────────────────
+function waitForData(f) {
+  return new Promise(resolve => {
+    const check = () => ((f.type==='html'&&f.rawText!==null)||(f.type==='img'&&f.b64!==null)) ? resolve() : setTimeout(check, 50);
+    check();
+  });
+}
+
+async function callGemini(f, key, signal) {
+  const sheetUrl = document.getElementById('sheet-url').value.trim() || '（未入力）';
+  let ctx = document.getElementById(f.type==='html'?'html-ctx':'img-ctx').value.trim().replace('{SHEET_URL}', sheetUrl);
+  // Inject fetched customer data if available
+  if (sheetCustomerData) {
+    ctx = ctx + '\n\n# 顧客データ（スプレッドシートより）\n' + sheetCustomerData;
+  }
+  const model = document.getElementById('model-select').value;
+  const parts = f.type === 'html'
+    ? [{ text: 'Review this HTML file: ' + f.name + '\n\n```html\n' + f.rawText + '\n```' }]
+    : [{ text: 'Analyze this image: ' + f.name }, { inline_data: { mime_type: f.mime, data: f.b64 } }];
+  const res = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key,
+    { method:'POST', signal, headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ system_instruction:{parts:[{text:ctx}]}, contents:[{role:'user',parts}] }) }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('No response from Gemini.');
+  return text;
+}
+
+// ── Result cards ───────────────────────────────────────
+function createResultCard(f) {
+  const list = document.getElementById('results-list');
+
+  const card = document.createElement('div');
+  card.className = 'result-card';
+  card.id = 'rc-' + f.id;
+
+  const hdr = document.createElement('div');
+  hdr.className = 'result-card-header';
+
+  const dot = document.createElement('div');
+  dot.className = 'result-dot pending';
+  dot.id = 'rdot-' + f.id;
+
+  const fname = document.createElement('span');
+  fname.className = 'result-filename';
+  fname.textContent = f.name;
+
+  const badge = document.createElement('span');
+  badge.className = 'result-type-badge ' + f.type;
+  badge.textContent = f.type === 'html' ? 'HTML' : 'Image';
+
+  const timeEl = document.createElement('span');
+  timeEl.className = 'result-time';
+  timeEl.id = 'rtime-' + f.id;
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-btn';
+  copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', () => copyResult(f.id));
+
+  // Export wrap — hidden until result is done
+  const expWrap = document.createElement('div');
+  expWrap.className = 'export-wrap';
+  expWrap.id = 'expwrap-' + f.id;
+  expWrap.style.cssText = 'position:relative;display:none';
+
+  const expBtn = document.createElement('button');
+  expBtn.className = 'export-btn';
+  expBtn.innerHTML =
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    + ' Export '
+    + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>';
+  expBtn.addEventListener('click', function(e) { toggleExportMenu(f.id, e); });
+
+  const expMenu = document.createElement('div');
+  expMenu.className = 'export-menu';
+  expMenu.id = 'expmenu-' + f.id;
+  expMenu.style.display = 'none';
+
+  const pdfBtn = document.createElement('button');
+  pdfBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Download PDF';
+  pdfBtn.addEventListener('click', function() { downloadPDF(f.id, f.name); });
+
+  const sheetsBtn = document.createElement('button');
+  sheetsBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg> Save to Sheets';
+  sheetsBtn.addEventListener('click', function() { exportToSheets(f.id, f.name); });
+
+  expMenu.appendChild(pdfBtn);
+  expMenu.appendChild(sheetsBtn);
+  expWrap.appendChild(expBtn);
+  expWrap.appendChild(expMenu);
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'del-result-btn';
+  delBtn.id = 'delbtn-' + f.id;
+  delBtn.title = 'Delete';
+  delBtn.style.display = 'none';
+  delBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  delBtn.addEventListener('click', function() { deleteResult(f.id); });
+
+  hdr.appendChild(dot);
+  hdr.appendChild(fname);
+  hdr.appendChild(badge);
+  hdr.appendChild(timeEl);
+  hdr.appendChild(copyBtn);
+  hdr.appendChild(expWrap);
+  hdr.appendChild(delBtn);
+
+  const body = document.createElement('div');
+  body.className = 'result-body loading';
+  body.id = 'rbody-' + f.id;
+  body.textContent = 'Waiting for Gemini…';
+
+  card.appendChild(hdr);
+  card.appendChild(body);
+  list.appendChild(card);
+}
+
+function setResultDot(id, st) {
+  const d = document.getElementById('rdot-'+id); if (d) d.className = 'result-dot ' + st;
+  // Show delete button once finished
+  const delBtn = document.getElementById('delbtn-'+id);
+  if (delBtn && ['done','error','stopped'].includes(st)) delBtn.style.display = '';
+  const expWrap = document.getElementById('expwrap-'+id);
+  if (expWrap && st === 'done') expWrap.style.display = '';
+}
+
+function deleteResult(id) {
+  const card = document.getElementById('rc-'+id);
+  if (card) card.remove();
+  delete results[id];
+  files = files.filter(f => f.id !== id);
+  renderQueue();
+  if (!document.querySelectorAll('.result-card').length) {
+    document.getElementById('results-section').style.display = 'none';
+  }
+}
+
+// ── Context persistence ────────────────────────────────
+const HTML_CTX_KEY = 'gemini_ws_html_ctx';
+const IMG_CTX_KEY  = 'gemini_ws_img_ctx';
+
+function loadContextsFromStorage() {
+  const htmlSaved  = localStorage.getItem(HTML_CTX_KEY);
+  const imgSaved   = localStorage.getItem(IMG_CTX_KEY);
+  const urlSaved   = localStorage.getItem('gemini_ws_sheet_url');
+  if (htmlSaved !== null) document.getElementById('html-ctx').value = htmlSaved;
+  if (imgSaved  !== null) document.getElementById('img-ctx').value  = imgSaved;
+  if (urlSaved  !== null) {
+    document.getElementById('sheet-url').value = urlSaved;
+    updateSheetLink(urlSaved);
+  }
+  if (htmlSaved !== null || imgSaved !== null) showSavedBadge();
+}
+
+function saveSheetUrl() {
+  const val = document.getElementById('sheet-url').value.trim();
+  localStorage.setItem('gemini_ws_sheet_url', val);
+  updateSheetLink(val);
+}
+
+function updateSheetLink(url) {
+  const link = document.getElementById('sheet-url-link');
+  if (url && url.startsWith('http')) { link.href = url; link.style.display = ''; }
+  else { link.style.display = 'none'; }
+}
+
+function saveContexts() {
+  localStorage.setItem(HTML_CTX_KEY, document.getElementById('html-ctx').value);
+  localStorage.setItem(IMG_CTX_KEY,  document.getElementById('img-ctx').value);
+  const urlVal = document.getElementById('sheet-url').value.trim();
+  if (urlVal) localStorage.setItem('gemini_ws_sheet_url', urlVal);
+  showSavedBadge();
+}
+
+function showSavedBadge() {
+  const badge = document.getElementById('ctx-saved-badge');
+  badge.style.display = '';
+  clearTimeout(badge._timer);
+  badge._timer = setTimeout(() => badge.style.display = 'none', 2000);
+}
+
+function exportContexts() {
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    htmlContext: document.getElementById('html-ctx').value,
+    imgContext:  document.getElementById('img-ctx').value,
+    sheetUrl:    document.getElementById('sheet-url').value
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gemini-context-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importContexts(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.htmlContext !== undefined) document.getElementById('html-ctx').value = data.htmlContext;
+      if (data.imgContext  !== undefined) document.getElementById('img-ctx').value  = data.imgContext;
+      if (data.sheetUrl    !== undefined) { document.getElementById('sheet-url').value = data.sheetUrl; updateSheetLink(data.sheetUrl); }
+      saveContexts();
+    } catch(err) {
+      alert('Invalid file. Please import a valid context .json file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+const DEFAULT_HTML_CTX = document.getElementById('html-ctx').value;
+const DEFAULT_IMG_CTX  = document.getElementById('img-ctx').value;
+
+function resetContexts() {
+  if (!confirm('Reset both contexts to default? Your saved changes will be lost.')) return;
+  document.getElementById('html-ctx').value = DEFAULT_HTML_CTX;
+  document.getElementById('img-ctx').value  = DEFAULT_IMG_CTX;
+  localStorage.removeItem(HTML_CTX_KEY);
+  localStorage.removeItem(IMG_CTX_KEY);
+  localStorage.removeItem('gemini_ws_sheet_url');
+  document.getElementById('sheet-url').value = '';
+  updateSheetLink('');
+  const badge = document.getElementById('ctx-saved-badge');
+  badge.style.display = '';
+  badge.textContent = 'Reset';
+  badge.style.color = 'var(--amber)';
+  badge.style.background = 'var(--amber-d)';
+  clearTimeout(badge._timer);
+  badge._timer = setTimeout(() => {
+    badge.style.display = 'none';
+    badge.textContent = 'Saved';
+    badge.style.color = 'var(--green)';
+    badge.style.background = 'var(--green-d)';
+  }, 1800);
+}
+
+// Auto-load saved contexts on startup
+loadContextsFromStorage();
+function mdToHtml(text) {
+  // Tables
+  const lines = text.split('\n');
+  let html = '';
+  let inTable = false;
+  let tableHtml = '';
+  let headerDone = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+      if (!inTable) { inTable = true; headerDone = false; tableHtml = '<table>'; }
+      if (/^\|[\s\-|]+\|$/.test(line.trim())) {
+        // separator row
+        headerDone = true;
+        continue;
+      }
+      const cells = line.trim().slice(1,-1).split('|').map(c => c.trim());
+      if (!headerDone) {
+        tableHtml += '<tr>' + cells.map(c => '<th>'+escHtml(c)+'</th>').join('') + '</tr>';
+      } else {
+        tableHtml += '<tr>' + cells.map(c => '<td>'+escHtml(c)+'</td>').join('') + '</tr>';
+      }
+    } else {
+      if (inTable) { html += tableHtml + '</table>'; inTable = false; tableHtml = ''; }
+      // Headings
+      let l = line;
+      if (/^### /.test(l)) { html += '<h3>'+escHtml(l.slice(4))+'</h3>'; continue; }
+      if (/^## /.test(l))  { html += '<h2>'+escHtml(l.slice(3))+'</h2>'; continue; }
+      if (/^# /.test(l))   { html += '<h1>'+escHtml(l.slice(2))+'</h1>'; continue; }
+      // List items
+      if (/^[-*] /.test(l)) { html += '<ul><li>'+inlineMd(l.slice(2))+'</li></ul>'; continue; }
+      if (/^\d+\. /.test(l)) { html += '<ol><li>'+inlineMd(l.replace(/^\d+\. /,''))+'</li></ol>'; continue; }
+      // Blank line
+      if (l.trim() === '') { html += '<br>'; continue; }
+      html += '<p>'+inlineMd(l)+'</p>';
+    }
+  }
+  if (inTable) html += tableHtml + '</table>';
+  // Merge adjacent ul/ol
+  html = html.replace(/<\/ul><ul>/g,'').replace(/<\/ol><ol>/g,'');
+  return html;
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function inlineMd(s) {
+  return escHtml(s)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`(.+?)`/g,'<code>$1</code>');
+}
+function setResultBody(id, text, typeOrBool, time, elapsed) {
+  const b = document.getElementById('rbody-'+id); if (!b) return;
+  const cls = typeof typeOrBool === 'boolean' ? (typeOrBool ? 'error' : '') : (typeOrBool || '');
+  b.className = 'result-body' + (cls ? ' '+cls : '');
+  if (cls === 'loading' || cls === 'stopped' || cls === 'paused' || cls === 'error') {
+    b.textContent = text;
+  } else {
+    b.innerHTML = mdToHtml(text);
+  }
+  const t = document.getElementById('rtime-'+id);
+  if (t) {
+    t.innerHTML = (time ? time : '') + (elapsed ? ' <span class="file-timer">(' + elapsed + ')</span>' : '');
+  }
+}
+
+function copyResult(id) {
+  const b = document.getElementById('rbody-'+id); if (!b) return;
+  navigator.clipboard.writeText(b.textContent).then(() => {
+    const card = document.getElementById('rc-'+id); if (!card) return;
+    const btn = card.querySelector('.copy-btn'); if (!btn) return;
+    btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// ── Batch timer ───────────────────────────────────────────
+function startBatchTimer() {
+  batchStartTime = Date.now();
+  const el = document.getElementById('batch-timer');
+  el.style.display = '';
+  el.textContent = '0:00';
+  clearInterval(batchTimerInterval);
+  batchTimerInterval = setInterval(() => {
+    const sec = Math.floor((Date.now() - batchStartTime) / 1000);
+    const m = Math.floor(sec / 60);
+    const s = String(sec % 60).padStart(2, '0');
+    el.textContent = m + ':' + s;
+  }, 1000);
+}
+
+function stopBatchTimer() {
+  clearInterval(batchTimerInterval);
+  // Show final time with ✓
+  const el = document.getElementById('batch-timer');
+  if (el && batchStartTime) {
+    const sec = Math.floor((Date.now() - batchStartTime) / 1000);
+    const m = Math.floor(sec / 60);
+    const s = String(sec % 60).padStart(2, '0');
+    el.textContent = '✓ ' + m + ':' + s;
+    el.style.color = 'var(--green)';
+    setTimeout(() => { el.style.color = ''; }, 3000);
+  }
+}
+
+// ── Sheet connect & fetch ──────────────────────────────────
+async function connectSheet() {
+  const url = document.getElementById('sheet-url').value.trim();
+  if (!url) { alert('Please paste a Google Sheet URL first.'); return; }
+  const spreadsheetId = extractSheetId(url);
+  if (!spreadsheetId) { alert('Could not parse Sheet ID from URL.'); return; }
+
+  setSheetStatus('loading', 'Connecting…');
+  document.getElementById('sheet-tab-row').style.display = '';
+
+  // Need OAuth token to read sheet
+  if (!gsToken) {
+    authorizeGoogle(() => fetchSheetTabs(spreadsheetId));
+  } else {
+    fetchSheetTabs(spreadsheetId);
+  }
+}
+
+async function fetchSheetTabs(spreadsheetId) {
+  try {
+    const res = await fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '?fields=sheets.properties',
+      { headers: { 'Authorization': 'Bearer ' + gsToken } }
+    );
+    if (!res.ok) {
+      if (res.status === 401) { gsToken = null; authorizeGoogle(() => fetchSheetTabs(spreadsheetId)); return; }
+      throw new Error('HTTP ' + res.status);
+    }
+    const data = await res.json();
+    const tabs = data.sheets.map(s => s.properties.title);
+    const sel = document.getElementById('sheet-tab-select');
+    sel.innerHTML = '<option value="">— select customer tab —</option>';
+    tabs.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      sel.appendChild(opt);
+    });
+    setSheetStatus('ok', tabs.length + ' tabs found');
+    // Restore saved tab
+    const saved = localStorage.getItem('gemini_ws_sheet_tab');
+    if (saved && tabs.includes(saved)) { sel.value = saved; onTabChange(); }
+  } catch(e) {
+    setSheetStatus('err', 'Error: ' + e.message);
+  }
+}
+
+async function onTabChange() {
+  const tab = document.getElementById('sheet-tab-select').value;
+  if (!tab) { sheetCustomerData = null; setSheetStatus('ok', ''); return; }
+  localStorage.setItem('gemini_ws_sheet_tab', tab);
+  const url = document.getElementById('sheet-url').value.trim();
+  const spreadsheetId = extractSheetId(url);
+  if (!spreadsheetId || !gsToken) return;
+  setSheetStatus('loading', 'Loading tab data…');
+  try {
+    const res = await fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId +
+      '/values/' + encodeURIComponent(tab) + '?majorDimension=ROWS',
+      { headers: { 'Authorization': 'Bearer ' + gsToken } }
+    );
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rows = data.values || [];
+    // Convert to readable text: "Label: Value" pairs
+    const lines = rows.map(row => row.join('\t')).join('\n');
+    sheetCustomerData = lines;
+    setSheetStatus('ok', '✓ ' + rows.length + ' rows loaded from "' + tab + '"');
+  } catch(e) {
+    setSheetStatus('err', 'Failed to load tab: ' + e.message);
+    sheetCustomerData = null;
+  }
+}
+
+function setSheetStatus(type, msg) {
+  const el = document.getElementById('sheet-status');
+  el.className = 'sheet-status' + (type ? ' ' + type : '');
+  el.textContent = msg;
+}
+
+// ── Export menu ────────────────────────────────────────
+function toggleExportMenu(id, e) {
+  e.stopPropagation();
+  const menu = document.getElementById('expmenu-'+id);
+  const isOpen = menu.style.display !== 'none';
+  // close all menus first
+  document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
+  if (!isOpen) menu.style.display = '';
+}
+document.addEventListener('click', () => {
+  document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
+});
+
+// ── PDF download ───────────────────────────────────────
+function downloadPDF(id, filename) {
+  document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
+  const r = results[id]; if (!r) return;
+  const time = document.getElementById('rtime-'+id)?.textContent || '';
+  const f = files.find(f => f.id === id);
+  const type = f ? (f.type === 'html' ? 'HTML Review' : 'Image Analysis') : '';
+  const safe = filename.replace(/[<>:"/\|?*]/g, '_');
+
+  // Build printable HTML
+  const tableRows = r.text.split('\n').filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+  const hasTable = tableRows.length >= 3;
+
+  let bodyContent = '';
+  if (hasTable) {
+    bodyContent = mdToHtml(r.text);
+  } else {
+    bodyContent = '<p>' + r.text.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
+  }
+
+  const metaLine = type + (time ? ' · ' + time : '') + ' · Generated by Gemini Workspace';
+  const bodySection = r.text.trim() === '問題なし'
+    ? '<div class="no-issue">&#10003; &#21839;&#39006;&#12394;&#12375;</div>'
+    : bodyContent;
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<style>' +
+    '@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap);' +
+    '* { box-sizing: border-box; margin: 0; padding: 0; }' +
+    'body { font-family: Noto Sans JP, Hiragino Sans, Yu Gothic, sans-serif; font-size: 12px; line-height: 1.8; color: #1a1a1a; padding: 32px 40px; }' +
+    'h1 { font-size: 16px; font-weight: 600; border-bottom: 2px solid #7c6af7; padding-bottom: 8px; margin-bottom: 4px; color: #1a1a1a; }' +
+    '.meta { font-size: 11px; color: #666; margin-bottom: 24px; }' +
+    'table { width: 100%; border-collapse: collapse; margin: 12px 0; }' +
+    'th { background: #f0effe; color: #3d2db5; font-weight: 600; padding: 8px 10px; text-align: left; border: 1px solid #c5bef9; font-size: 11px; }' +
+    'td { padding: 8px 10px; border: 1px solid #e0ddf9; vertical-align: top; font-size: 11px; line-height: 1.7; }' +
+    'tr:nth-child(even) td { background: #faf9ff; }' +
+    'p { margin: 8px 0; }' +
+    'h2, h3 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; }' +
+    'ul, ol { margin: 6px 0 6px 18px; }' +
+    'li { margin: 3px 0; }' +
+    '.no-issue { color: #0f6e56; font-weight: 600; font-size: 14px; padding: 16px; background: #e1f5ee; border-radius: 8px; }' +
+    '@media print { body { padding: 16px; } }' +
+    '<\/style>' +
+    '<\/head><body>' +
+    '<h1>' + filename + '<\/h1>' +
+    '<div class="meta">' + metaLine + '<\/div>' +
+    bodySection +
+    '<\/body><\/html>';
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => {
+    win.focus();
+    win.print();
+    // After print dialog, title drives the filename in most browsers
+    win.document.title = safe + '-result';
+  };
+}
+
+// ── Google Sheets export ───────────────────────────────
+let gsToken = null;
+
+function exportToSheets(id, filename) {
+  document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
+  const sheetUrl = document.getElementById('sheet-url').value.trim();
+  if (!sheetUrl) { alert('Please enter the Google Sheet URL in the context card first.'); return; }
+  const spreadsheetId = extractSheetId(sheetUrl);
+  if (!spreadsheetId) { alert('Could not parse the Google Sheet ID from the URL. Please check the URL.'); return; }
+  const r = results[id]; if (!r || r.isErr) { alert('No valid result to export.'); return; }
+
+  if (gsToken) {
+    doSheetsExport(id, filename, spreadsheetId);
+  } else {
+    authorizeGoogle(() => doSheetsExport(id, filename, spreadsheetId));
+  }
+}
+
+function extractSheetId(url) {
+  const m = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function authorizeGoogle(callback) {
+  // Load Google Identity Services
+  if (!window._gsLoaded) {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = () => { window._gsLoaded = true; doAuthorize(callback); };
+    document.head.appendChild(s);
+  } else {
+    doAuthorize(callback);
+  }
+}
+
+function doAuthorize(callback) {
+  // Prompt user for Client ID if not set
+  let clientId = localStorage.getItem('gemini_ws_goog_client_id');
+  if (!clientId) {
+    clientId = prompt(
+      'Google Sheets export requires a Google OAuth Client ID.\n\n' +
+      'Steps to get one (free):\n' +
+      '1. Go to console.cloud.google.com\n' +
+      '2. Create a project → Enable "Google Sheets API"\n' +
+      '3. Credentials → Create OAuth 2.0 Client ID (Web Application)\n' +
+      '4. Add this page URL to "Authorized JavaScript origins"\n\n' +
+      'Paste your Client ID here:'
+    );
+    if (!clientId) return;
+    localStorage.setItem('gemini_ws_goog_client_id', clientId.trim());
+  }
+
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId.trim(),
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    callback: (resp) => {
+      if (resp.error) { alert('Google auth failed: ' + resp.error); return; }
+      gsToken = resp.access_token;
+      callback();
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function doSheetsExport(id, filename, spreadsheetId) {
+  const r = results[id];
+  const time = document.getElementById('rtime-'+id)?.textContent || new Date().toLocaleTimeString();
+  const f = files.find(f => f.id === id);
+  const type = f ? (f.type === 'html' ? 'HTML Review' : 'Image Analysis') : '';
+
+  // Parse result into rows
+  const rows = buildSheetRows(r.text, filename, type, time);
+
+  // Tab name: filename truncated to 100 chars (Sheets limit)
+  const tabName = (filename.replace(/\.[^.]+$/, '') + ' ' + time.replace(/:/g,'-')).slice(0, 99);
+
+  try {
+    // 1. Create new sheet tab
+    const addResp = await fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + ':batchUpdate',
+      {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + gsToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests: [{ addSheet: { properties: { title: tabName } } }] })
+      }
+    );
+    if (!addResp.ok) {
+      const err = await addResp.json();
+      // Token may be expired
+      if (addResp.status === 401) { gsToken = null; authorizeGoogle(() => doSheetsExport(id, filename, spreadsheetId)); return; }
+      throw new Error(err.error?.message || 'Failed to create sheet tab');
+    }
+    const addData = await addResp.json();
+    const newSheetId = addData.replies[0].addSheet.properties.sheetId;
+    const newTitle   = addData.replies[0].addSheet.properties.title;
+
+    // 2. Write rows
+    const writeResp = await fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + '/values/' +
+      encodeURIComponent(newTitle + '!A1') + '?valueInputOption=RAW',
+      {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + gsToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: rows })
+      }
+    );
+    if (!writeResp.ok) { const e = await writeResp.json(); throw new Error(e.error?.message || 'Write failed'); }
+
+    // 3. Style header row (bold + bg color)
+    await fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + spreadsheetId + ':batchUpdate',
+      {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + gsToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests: [
+          { repeatCell: { range: { sheetId: newSheetId, startRowIndex: 0, endRowIndex: 1 },
+            cell: { userEnteredFormat: {
+              backgroundColor: { red: 0.49, green: 0.42, blue: 0.97 },
+              textFormat: { bold: true, foregroundColor: { red:1, green:1, blue:1 } }
+            }},
+            fields: 'userEnteredFormat(backgroundColor,textFormat)'
+          }},
+          { autoResizeDimensions: { dimensions: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 6 } } }
+        ]})
+      }
+    );
+
+    // Show success
+    showExportSuccess(id, sheetUrl);
+  } catch(err) {
+    alert('Sheets export failed: ' + err.message);
+  }
+}
+
+function buildSheetRows(text, filename, type, time) {
+  // Try to parse markdown table
+  const lines = text.split('\n');
+  const tableLines = lines.filter(l => l.trim().startsWith('|') && l.trim().endsWith('|'));
+  const sepLines   = tableLines.filter(l => /^\|[\s\-|]+\|$/.test(l.trim()));
+
+  if (tableLines.length >= 3 && sepLines.length >= 1) {
+    // Has markdown table — extract header + data rows
+    const nonSep = tableLines.filter(l => !/^\|[\s\-|]+\|$/.test(l.trim()));
+    const parsed = nonSep.map(l => l.trim().slice(1,-1).split('|').map(c => c.trim()));
+    const rows = [];
+    // Meta header
+    rows.push([filename, type, time]);
+    rows.push([]);
+    // Table
+    parsed.forEach(row => rows.push(row));
+    return rows;
+  } else {
+    // Plain text — dump as single column
+    const rows = [[filename, type, time], []];
+    lines.forEach(l => rows.push([l]));
+    return rows;
+  }
+}
+
+function showExportSuccess(id, sheetUrl) {
+  const card = document.getElementById('rc-'+id);
+  if (!card) return;
+  const existing = card.querySelector('.export-success');
+  if (existing) existing.remove();
+  const bar = document.createElement('div');
+  bar.className = 'export-success';
+  bar.innerHTML = '✓ Saved to Google Sheets — <a href="' + sheetUrl + '" target="_blank">Open Sheet ↗</a>';
+  card.appendChild(bar);
+  setTimeout(() => bar.remove(), 6000);
+}
+
+function refreshResultsSection() {
+  document.getElementById('results-section').style.display = Object.keys(results).length ? 'flex' : 'none';
+}
+
+// ── Save Markdown ──────────────────────────────────────
+function saveMarkdown() {
+  const done = files.filter(f => results[f.id]);
+  if (!done.length) { alert('No results to save yet.'); return; }
+  let md = '# Gemini Workspace Results\n_Generated: ' + new Date().toLocaleString() + '_\n\n---\n\n';
+  files.forEach(f => {
+    const r = results[f.id]; if (!r) return;
+    md += '## ' + (f.type==='html'?'📄':'🖼️') + ' ' + f.name + '\n';
+    md += '_' + (f.type==='html'?'HTML Review':'Image Analysis') + (r.time ? ' · ' + r.time : '') + '_\n\n';
+    md += r.isErr ? '> ⚠️ Error: ' + r.text + '\n\n' : r.text + '\n\n';
+    md += '---\n\n';
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([md], {type:'text/markdown'}));
+  a.download = 'gemini-results-' + Date.now() + '.md';
+  a.click();
+}
+</script>
+</body>
+</html>
