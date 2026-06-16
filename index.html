@@ -49,10 +49,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
 /* API Key */
-.api-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); }
-.api-label { font-size: 12px; color: var(--text2); white-space: nowrap; font-weight: 500; }
-#apikey { flex: 1; background: transparent; border: none; outline: none; font-size: 13px; color: var(--text); font-family: monospace; }
-#apikey::placeholder { color: var(--text3); font-family: -apple-system, sans-serif; }
+.provider-tabs { display:flex; gap:4px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:4px; }
+.provider-tab { flex:1; padding:7px 10px; font-size:12px; font-weight:600; color:var(--text3); background:transparent; border:none; border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all 0.15s; white-space:nowrap; }
+.provider-tab:hover { color:var(--text2); }
+.provider-tab.active { background:var(--bg2); color:var(--text); border:1px solid var(--border2); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+.provider-tab .dot { width:6px; height:6px; border-radius:50%; background:var(--text3); flex-shrink:0; transition:all 0.2s; }
+.provider-tab .dot.ok { background:var(--green); box-shadow:0 0 5px var(--green); }
+.provider-panel { display:none; flex-direction:column; gap:10px; }
+.provider-panel.active { display:flex; }
+.api-row { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); }
+.api-label { font-size:12px; color:var(--text2); white-space:nowrap; font-weight:500; }
+.api-key-input { flex:1; background:transparent; border:none; outline:none; font-size:13px; color:var(--text); font-family:monospace; }
+.api-key-input::placeholder { color:var(--text3); font-family:-apple-system,sans-serif; }
+.model-row { display:flex; align-items:center; gap:10px; padding:8px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); }
+.model-row label { font-size:12px; color:var(--text2); white-space:nowrap; font-weight:500; }
+.model-row select { flex:1; background:transparent; border:none; outline:none; font-size:12px; color:var(--text); cursor:pointer; }
+.api-hint { font-size:11px; color:var(--text3); }
+.api-hint a { color:var(--accent); text-decoration:none; }
+.api-hint a:hover { text-decoration:underline; }
 .icon-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 3px; border-radius: 4px; display: flex; transition: color 0.1s; }
 .icon-btn:hover { color: var(--text2); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); flex-shrink: 0; transition: all 0.2s; }
@@ -228,34 +242,113 @@ input[type="file"] { display: none; }
   <!-- Header -->
   <header class="header">
     <div class="logo">✦</div>
-    <h1>Gemini Workspace</h1>
+    <h1>AI Workspace</h1>
     <div class="header-meta">
       <span class="badge" id="queue-count">0 files</span>
-      <select id="model-select" style="font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;outline:none;cursor:pointer;">
-        <option value="gemini-2.5-flash">gemini-2.5-flash ✦ free</option>
-        <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite ✦ free</option>
-        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-      </select>
+      <span class="badge" id="active-provider-badge">Gemini</span>
+      <span class="badge" id="active-model-badge">gemini-2.5-flash</span>
     </div>
   </header>
 
-  <!-- API Key -->
+  <!-- Provider & API Keys -->
   <div class="card">
     <div class="card-header">
       <div class="card-icon">🔑</div>
-      <h2>API key</h2>
-      <span class="hint"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);text-decoration:none;">Get free key ↗</a></span>
+      <h2>Provider &amp; API key</h2>
     </div>
     <div class="card-body">
-      <div class="api-row">
-        <span class="api-label">Gemini API key</span>
-        <input type="password" id="apikey" placeholder="Paste your AIza… key here" oninput="checkKey()" />
-        <button class="icon-btn" onclick="toggleKey()" title="Show/hide">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+
+      <!-- Provider tabs -->
+      <div class="provider-tabs">
+        <button class="provider-tab active" id="ptab-gemini" onclick="switchProvider('gemini')">
+          <span class="dot" id="dot-gemini"></span> Gemini
         </button>
-        <div class="status-dot" id="api-dot"></div>
+        <button class="provider-tab" id="ptab-openai" onclick="switchProvider('openai')">
+          <span class="dot" id="dot-openai"></span> OpenAI
+        </button>
+        <button class="provider-tab" id="ptab-anthropic" onclick="switchProvider('anthropic')">
+          <span class="dot" id="dot-anthropic"></span> Claude
+        </button>
+        <button class="provider-tab" id="ptab-groq" onclick="switchProvider('groq')">
+          <span class="dot" id="dot-groq"></span> Groq
+        </button>
       </div>
+
+      <!-- Gemini -->
+      <div class="provider-panel active" id="panel-gemini">
+        <div class="api-row">
+          <span class="api-label">API key</span>
+          <input type="password" class="api-key-input" id="key-gemini" placeholder="AIza…" oninput="onKeyInput('gemini')" />
+          <button class="icon-btn" onclick="toggleKeyVis('key-gemini')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div class="model-row">
+          <label>Model</label>
+          <select id="model-gemini" onchange="updateModelBadge()">
+            <option value="gemini-2.5-flash">gemini-2.5-flash ✦ free</option>
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite ✦ free</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          </select>
+        </div>
+        <p class="api-hint">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com ↗</a></p>
+      </div>
+
+      <!-- OpenAI -->
+      <div class="provider-panel" id="panel-openai">
+        <div class="api-row">
+          <span class="api-label">API key</span>
+          <input type="password" class="api-key-input" id="key-openai" placeholder="sk-…" oninput="onKeyInput('openai')" />
+          <button class="icon-btn" onclick="toggleKeyVis('key-openai')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div class="model-row">
+          <label>Model</label>
+          <select id="model-openai" onchange="updateModelBadge()">
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="gpt-4o-mini">gpt-4o-mini ✦ cheaper</option>
+            <option value="gpt-4.1">gpt-4.1</option>
+            <option value="gpt-4.1-mini">gpt-4.1-mini ✦ cheaper</option>
+          </select>
+        </div>
+        <p class="api-hint">Get a key at <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com ↗</a></p>
+      </div>
+
+      <!-- Anthropic Claude -->
+      <div class="provider-panel" id="panel-anthropic">
+        <div class="api-row">
+          <span class="api-label">API key</span>
+          <input type="password" class="api-key-input" id="key-anthropic" placeholder="sk-ant-…" oninput="onKeyInput('anthropic')" />
+          <button class="icon-btn" onclick="toggleKeyVis('key-anthropic')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div class="model-row">
+          <label>Model</label>
+          <select id="model-anthropic" onchange="updateModelBadge()">
+            <option value="claude-sonnet-4-6">claude-sonnet-4-6</option>
+            <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 ✦ cheaper</option>
+            <option value="claude-opus-4-6">claude-opus-4-6 ✦ powerful</option>
+          </select>
+        </div>
+        <p class="api-hint">Get a key at <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com ↗</a> — note: requires a CORS proxy for browser use</p>
+      </div>
+
+      <!-- Groq -->
+      <div class="provider-panel" id="panel-groq">
+        <div class="api-row">
+          <span class="api-label">API key</span>
+          <input type="password" class="api-key-input" id="key-groq" placeholder="gsk_…" oninput="onKeyInput('groq')" />
+          <button class="icon-btn" onclick="toggleKeyVis('key-groq')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <div class="model-row">
+          <label>Model</label>
+          <select id="model-groq" onchange="updateModelBadge()">
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b ✦ free</option>
+            <option value="llama-3.1-8b-instant">llama-3.1-8b ✦ free fast</option>
+            <option value="mistral-saba-24b">mistral-saba-24b ✦ free</option>
+            <option value="llama-4-scout-17b-16e-instruct">llama-4-scout ✦ free</option>
+          </select>
+        </div>
+        <p class="api-hint">Get a free key at <a href="https://console.groq.com/keys" target="_blank">console.groq.com ↗</a> — image support on llama-3.3-70b only</p>
+      </div>
+
     </div>
   </div>
 
@@ -517,13 +610,71 @@ let fileStartTimes = {};      // id → Date.now()
 // Sheet data state
 let sheetCustomerData = null; // fetched customer data string
 
-// ── API key ────────────────────────────────────────────
-function checkKey() {
-  document.getElementById('api-dot').classList.toggle('ok', document.getElementById('apikey').value.trim().length > 10);
+// ── Provider & API key ─────────────────────────────────
+let currentProvider = 'gemini';
+
+const PROVIDERS = {
+  gemini:    { name:'Gemini',  modelId:'model-gemini',    keyId:'key-gemini' },
+  openai:    { name:'OpenAI',  modelId:'model-openai',    keyId:'key-openai' },
+  anthropic: { name:'Claude',  modelId:'model-anthropic', keyId:'key-anthropic' },
+  groq:      { name:'Groq',    modelId:'model-groq',      keyId:'key-groq' }
+};
+
+function switchProvider(p) {
+  currentProvider = p;
+  document.querySelectorAll('.provider-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.provider-panel').forEach(t => t.classList.remove('active'));
+  document.getElementById('ptab-' + p).classList.add('active');
+  document.getElementById('panel-' + p).classList.add('active');
+  localStorage.setItem('gemini_ws_provider', p);
+  updateModelBadge();
 }
-function toggleKey() {
-  const el = document.getElementById('apikey');
+
+function onKeyInput(p) {
+  const val = document.getElementById('key-' + p).value.trim();
+  document.getElementById('dot-' + p).classList.toggle('ok', val.length > 10);
+  localStorage.setItem('gemini_ws_key_' + p, val);
+}
+
+function toggleKeyVis(id) {
+  const el = document.getElementById(id);
   el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function updateModelBadge() {
+  const p = PROVIDERS[currentProvider];
+  const model = document.getElementById(p.modelId)?.value || '';
+  document.getElementById('active-provider-badge').textContent = p.name;
+  document.getElementById('active-model-badge').textContent = model;
+  localStorage.setItem('gemini_ws_model_' + currentProvider, model);
+}
+
+function getActiveKey() {
+  return document.getElementById('key-' + currentProvider)?.value.trim() || '';
+}
+
+function getActiveModel() {
+  return document.getElementById('model-' + currentProvider)?.value || '';
+}
+
+function loadProviderSettings() {
+  const savedProvider = localStorage.getItem('gemini_ws_provider') || 'gemini';
+  Object.keys(PROVIDERS).forEach(p => {
+    const savedKey = localStorage.getItem('gemini_ws_key_' + p);
+    if (savedKey) {
+      document.getElementById('key-' + p).value = savedKey;
+      document.getElementById('dot-' + p).classList.toggle('ok', savedKey.length > 10);
+    }
+    const savedModel = localStorage.getItem('gemini_ws_model_' + p);
+    if (savedModel) {
+      const sel = document.getElementById('model-' + p);
+      if (sel) {
+        const opt = Array.from(sel.options).find(o => o.value === savedModel);
+        if (opt) sel.value = savedModel;
+      }
+    }
+  });
+  switchProvider(savedProvider);
 }
 
 // ── File helpers ───────────────────────────────────────
@@ -665,8 +816,8 @@ function hideControls() {
 }
 
 async function runPending() {
-  const key = document.getElementById('apikey').value.trim();
-  if (!key) { alert('Please paste your Gemini API key first.'); return; }
+  const key = getActiveKey();
+  if (!key) { alert('Please paste your ' + PROVIDERS[currentProvider].name + ' API key first.'); return; }
   const pending = files.filter(f => f.status === 'pending');
   if (!pending.length) { alert('No pending files to run.'); return; }
 
@@ -834,26 +985,112 @@ function waitForData(f) {
 }
 
 async function callGemini(f, key, signal) {
+  // Redirect to unified callAI
+  return callAI(f, key, signal);
+}
+
+async function callAI(f, key, signal) {
   const sheetUrl = document.getElementById('sheet-url').value.trim() || '（未入力）';
   let ctx = document.getElementById(f.type==='html'?'html-ctx':'img-ctx').value.trim().replace('{SHEET_URL}', sheetUrl);
-  // Inject fetched customer data if available
-  if (sheetCustomerData) {
-    ctx = ctx + '\n\n# 顧客データ（スプレッドシートより）\n' + sheetCustomerData;
+  if (sheetCustomerData) ctx += '\n\n# 顧客データ（スプレッドシートより）\n' + sheetCustomerData;
+  const model = getActiveModel();
+  const provider = currentProvider;
+
+  // Build user message content
+  let userContent;
+  if (f.type === 'html') {
+    userContent = 'Review this HTML file: ' + f.name + '\n\n```html\n' + f.rawText + '\n```';
+  } else {
+    userContent = 'Analyze this image: ' + f.name;
   }
-  const model = document.getElementById('model-select').value;
-  const parts = f.type === 'html'
-    ? [{ text: 'Review this HTML file: ' + f.name + '\n\n```html\n' + f.rawText + '\n```' }]
-    : [{ text: 'Analyze this image: ' + f.name }, { inline_data: { mime_type: f.mime, data: f.b64 } }];
-  const res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key,
-    { method:'POST', signal, headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ system_instruction:{parts:[{text:ctx}]}, contents:[{role:'user',parts}] }) }
-  );
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('No response from Gemini.');
-  return text;
+
+  // ── Gemini ──────────────────────────────────────────
+  if (provider === 'gemini') {
+    const parts = f.type === 'html'
+      ? [{ text: userContent }]
+      : [{ text: userContent }, { inline_data: { mime_type: f.mime, data: f.b64 } }];
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + key,
+      { method:'POST', signal, headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ system_instruction:{parts:[{text:ctx}]}, contents:[{role:'user',parts}] }) }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('No response from Gemini.');
+    return text;
+  }
+
+  // ── OpenAI ───────────────────────────────────────────
+  if (provider === 'openai') {
+    const msgContent = f.type === 'html'
+      ? userContent
+      : [{ type:'text', text: userContent },
+         { type:'image_url', image_url:{ url:'data:' + f.mime + ';base64,' + f.b64 } }];
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST', signal, headers:{'Content-Type':'application/json','Authorization':'Bearer ' + key},
+      body: JSON.stringify({
+        model,
+        messages:[
+          { role:'system', content: ctx },
+          { role:'user', content: msgContent }
+        ]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('No response from OpenAI.');
+    return text;
+  }
+
+  // ── Anthropic Claude ─────────────────────────────────
+  if (provider === 'anthropic') {
+    const msgContent = f.type === 'html'
+      ? [{ type:'text', text: userContent }]
+      : [{ type:'text', text: userContent },
+         { type:'image', source:{ type:'base64', media_type: f.mime, data: f.b64 } }];
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', signal,
+      headers:{'Content-Type':'application/json','x-api-key': key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({
+        model, max_tokens:4096,
+        system: ctx,
+        messages:[{ role:'user', content: msgContent }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data?.content?.[0]?.text;
+    if (!text) throw new Error('No response from Claude.');
+    return text;
+  }
+
+  // ── Groq ─────────────────────────────────────────────
+  if (provider === 'groq') {
+    const isVision = f.type === 'img' && model.includes('llama-3');
+    const msgContent = (!isVision || f.type === 'html')
+      ? userContent
+      : [{ type:'text', text: userContent },
+         { type:'image_url', image_url:{ url:'data:' + f.mime + ';base64,' + f.b64 } }];
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST', signal, headers:{'Content-Type':'application/json','Authorization':'Bearer ' + key},
+      body: JSON.stringify({
+        model,
+        messages:[
+          { role:'system', content: ctx },
+          { role:'user', content: msgContent }
+        ]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'HTTP ' + res.status);
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('No response from Groq.');
+    return text;
+  }
+
+  throw new Error('Unknown provider: ' + provider);
 }
 
 // ── Result cards ───────────────────────────────────────
@@ -1071,7 +1308,8 @@ function resetContexts() {
   }, 1800);
 }
 
-// Auto-load saved contexts on startup
+// Auto-load saved contexts and provider settings on startup
+loadProviderSettings();
 loadContextsFromStorage();
 function mdToHtml(text) {
   // Tables
