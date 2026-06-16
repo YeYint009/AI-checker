@@ -78,6 +78,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .ctx-action-btn:hover { background:var(--bg4); color:var(--text); }
 .ctx-action-btn.danger { color:var(--red); border-color:var(--red); background:var(--red-d); }
 .ctx-action-btn.danger:hover { opacity:0.8; }
+.ctx-export-wrap { position:relative; }
+.ctx-export-menu { display:none; position:absolute; right:0; top:calc(100% + 4px); background:var(--bg2); border:1px solid var(--border2); border-radius:var(--r); overflow:hidden; z-index:200; min-width:150px; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.ctx-export-menu button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; font-size:12px; color:var(--text2); background:none; border:none; cursor:pointer; text-align:left; transition:background 0.1s; white-space:nowrap; }
+.ctx-export-menu button:hover { background:var(--bg3); color:var(--text); }
+.ctx-export-menu button + button { border-top:1px solid var(--border); }
+.ctx-export-menu .menu-divider { height:1px; background:var(--border); margin:2px 0; }
 
 /* Textarea */
 textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 12.5px; line-height: 1.6; padding: 10px 12px; resize: vertical; font-family: inherit; outline: none; transition: border-color 0.15s; }
@@ -366,19 +372,52 @@ input[type="file"] { display: none; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Save
         </button>
-        <button class="ctx-action-btn" onclick="exportContexts()" title="Download as .json file">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export
-        </button>
-        <button class="ctx-action-btn" onclick="document.getElementById('ctx-import-input').click()" title="Load from .json file">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Import
-        </button>
+        <!-- Export dropdown -->
+        <div class="ctx-export-wrap" id="ctx-export-wrap">
+          <button class="ctx-action-btn" onclick="toggleCtxExportMenu(event)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ctx-export-menu" id="ctx-export-menu">
+            <button onclick="exportContextsAs('json')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              JSON (.json)
+            </button>
+            <button onclick="exportContextsAs('md')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Markdown (.md)
+            </button>
+            <button onclick="exportContextsAs('txt')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Plain text (.txt)
+            </button>
+            <button onclick="exportContextsAs('pdf')">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF (print)
+            </button>
+          </div>
+        </div>
+
+        <!-- Import dropdown -->
+        <div class="ctx-export-wrap" id="ctx-import-wrap">
+          <button class="ctx-action-btn" onclick="toggleCtxImportMenu(event)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="ctx-export-menu" id="ctx-import-menu">
+            <button onclick="triggerImport('json')">JSON (.json)</button>
+            <button onclick="triggerImport('md')">Markdown (.md)</button>
+            <button onclick="triggerImport('txt')">Plain text (.txt)</button>
+          </div>
+        </div>
+
         <button class="ctx-action-btn danger" onclick="resetContexts()" title="Reset to default">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
           Reset
         </button>
-        <input type="file" id="ctx-import-input" accept=".json" style="display:none" onchange="importContexts(event)" />
+        <input type="file" id="ctx-import-input" accept=".json,.md,.txt,.markdown" style="display:none" onchange="importContexts(event)" />
       </div>
     </div>
     <div class="card-body">
@@ -592,14 +631,14 @@ htmlファイルを送るので、このhtmlファイルをチェックしてく
 
 </div>
 <script>
-// ── State ──────────────────────────────────────────────
+// - State -
 let files = [];          // all queued file entries
-let results = {};        // id → result object
+let results = {};        // id -> result object
 let idCounter = 0;
 let batchCounter = 0;
 
 // Run control
-let activeControllers = {};  // id → AbortController
+let activeControllers = {};  // id -> AbortController
 let isPaused = false;
 let isStopped = false;
 let pauseResolvers = [];      // resolve fns waiting for resume
@@ -608,12 +647,12 @@ let activeBatch = null;       // track current batch promise
 // Timer state
 let batchStartTime = null;
 let batchTimerInterval = null;
-let fileStartTimes = {};      // id → Date.now()
+let fileStartTimes = {};      // id -> Date.now()
 
 // Sheet data state
 let sheetCustomerData = null; // fetched customer data string
 
-// ── Provider & API key ─────────────────────────────────
+// - Provider & API key -
 let currentProvider = 'gemini';
 
 const PROVIDERS = {
@@ -680,7 +719,7 @@ function loadProviderSettings() {
   switchProvider(savedProvider);
 }
 
-// ── File helpers ───────────────────────────────────────
+// - File helpers -
 function fmtSize(b) {
   if (b < 1024) return b + ' B';
   if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
@@ -689,7 +728,7 @@ function fmtSize(b) {
 function isHtml(f) { return /\.html?$/i.test(f.name) || f.type.includes('html'); }
 function isImg(f)  { return f.type.startsWith('image/'); }
 
-// ── Add files ──────────────────────────────────────────
+// - Add files -
 function addFiles(e) {
   processFileList(Array.from(e.target.files));
   e.target.value = '';
@@ -746,7 +785,7 @@ function removeFile(id) {
   refreshResultsSection();
 }
 
-// ── Render queue ───────────────────────────────────────
+// - Render queue -
 function renderQueue() {
   const el = document.getElementById('file-queue');
   el.innerHTML = '';
@@ -791,7 +830,7 @@ function setFileStatus(id, status) {
   if (rm) rm.style.display = status === 'running' ? 'none' : '';
 }
 
-// ── Run controls ───────────────────────────────────────
+// - Run controls -
 function updateRunBtn() {
   const pending = files.filter(f => f.status === 'pending');
   const isRunning = Object.keys(activeControllers).length > 0;
@@ -892,7 +931,7 @@ async function processFile(f, key) {
   }
 }
 
-// ── Pause / Resume ─────────────────────────────────────
+// - Pause / Resume -
 function togglePause() {
   if (isPaused) resumeAll(); else pauseAll();
 }
@@ -901,7 +940,7 @@ function pauseAll() {
   isPaused = true;
   setPauseUI(true);
   // Mark pending files as paused
-  files.filter(f => f.status === 'pending').forEach(f => { setFileStatus(f.id, 'paused'); setResultDot(f.id, 'paused'); setResultBody(f.id, 'Paused — waiting to resume…', 'paused'); });
+  files.filter(f => f.status === 'pending').forEach(f => { setFileStatus(f.id, 'paused'); setResultDot(f.id, 'paused'); setResultBody(f.id, 'Paused -- waiting to resume…', 'paused'); });
   updateProgress();
 }
 
@@ -937,7 +976,7 @@ function waitIfPaused(fileId) {
   return new Promise(resolve => { pauseResolvers.push(resolve); });
 }
 
-// ── Stop ───────────────────────────────────────────────
+// - Stop -
 function stopAll() {
   isStopped = true;
   isPaused = false;
@@ -960,7 +999,7 @@ function stopAll() {
   updateProgress();
 }
 
-// ── Progress ───────────────────────────────────────────
+// - Progress -
 function updateProgress() {
   const total = files.length;
   const done  = files.filter(f => ['done','error','stopped'].includes(f.status)).length;
@@ -979,7 +1018,7 @@ function updateProgress() {
   else { badge.style.display='none'; }
 }
 
-// ── Gemini call ────────────────────────────────────────
+// - Gemini call -
 function waitForData(f) {
   return new Promise(resolve => {
     const check = () => ((f.type==='html'&&f.rawText!==null)||(f.type==='img'&&f.b64!==null)) ? resolve() : setTimeout(check, 50);
@@ -1007,7 +1046,7 @@ async function callAI(f, key, signal) {
     userContent = 'Analyze this image: ' + f.name;
   }
 
-  // ── Gemini ──────────────────────────────────────────
+  // - Gemini -
   if (provider === 'gemini') {
     const parts = f.type === 'html'
       ? [{ text: userContent }]
@@ -1024,7 +1063,7 @@ async function callAI(f, key, signal) {
     return text;
   }
 
-  // ── OpenAI ───────────────────────────────────────────
+  // - OpenAI -
   if (provider === 'openai') {
     const msgContent = f.type === 'html'
       ? userContent
@@ -1047,7 +1086,7 @@ async function callAI(f, key, signal) {
     return text;
   }
 
-  // ── Anthropic Claude ─────────────────────────────────
+  // - Anthropic Claude -
   if (provider === 'anthropic') {
     const msgContent = f.type === 'html'
       ? [{ type:'text', text: userContent }]
@@ -1069,7 +1108,7 @@ async function callAI(f, key, signal) {
     return text;
   }
 
-  // ── Groq ─────────────────────────────────────────────
+  // - Groq -
   if (provider === 'groq') {
     const isVision = f.type === 'img' && model.includes('llama-3');
     const msgContent = (!isVision || f.type === 'html')
@@ -1096,7 +1135,7 @@ async function callAI(f, key, signal) {
   throw new Error('Unknown provider: ' + provider);
 }
 
-// ── Result cards ───────────────────────────────────────
+// - Result cards -
 function createResultCard(f) {
   const list = document.getElementById('results-list');
 
@@ -1128,7 +1167,7 @@ function createResultCard(f) {
   copyBtn.textContent = 'Copy';
   copyBtn.addEventListener('click', () => copyResult(f.id));
 
-  // Export wrap — hidden until result is done
+  // Export wrap -- hidden until result is done
   const expWrap = document.createElement('div');
   expWrap.className = 'export-wrap';
   expWrap.id = 'expwrap-' + f.id;
@@ -1256,7 +1295,7 @@ async function rerunFile(id) {
   updateRunBtn();
 }
 
-// ── Context persistence ────────────────────────────────
+// - Context persistence -
 const HTML_CTX_KEY = 'gemini_ws_html_ctx';
 const IMG_CTX_KEY  = 'gemini_ws_img_ctx';
 
@@ -1300,39 +1339,126 @@ function showSavedBadge() {
   badge._timer = setTimeout(() => badge.style.display = 'none', 2000);
 }
 
-function exportContexts() {
-  const data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
+// - Context export dropdown -
+function toggleCtxExportMenu(e) {
+  e.stopPropagation();
+  const m = document.getElementById('ctx-export-menu');
+  const im = document.getElementById('ctx-import-menu');
+  im.style.display = 'none';
+  m.style.display = m.style.display === 'none' ? '' : 'none';
+}
+function toggleCtxImportMenu(e) {
+  e.stopPropagation();
+  const m = document.getElementById('ctx-import-menu');
+  const em = document.getElementById('ctx-export-menu');
+  em.style.display = 'none';
+  m.style.display = m.style.display === 'none' ? '' : 'none';
+}
+document.addEventListener('click', () => {
+  const em = document.getElementById('ctx-export-menu');
+  const im = document.getElementById('ctx-import-menu');
+  if (em) em.style.display = 'none';
+  if (im) im.style.display = 'none';
+});
+
+function getCtxData() {
+  return {
     htmlContext: document.getElementById('html-ctx').value,
     imgContext:  document.getElementById('img-ctx').value,
-    sheetUrl:    document.getElementById('sheet-url').value
+    sheetUrl:    document.getElementById('sheet-url').value,
+    exportedAt:  new Date().toISOString()
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+}
+
+function exportContextsAs(fmt) {
+  document.getElementById('ctx-export-menu').style.display = 'none';
+  const d = getCtxData();
+  const date = new Date().toISOString().slice(0,10);
+  let content, mime, ext;
+
+  if (fmt === 'json') {
+    content = JSON.stringify({ version:1, exportedAt:d.exportedAt, htmlContext:d.htmlContext, imgContext:d.imgContext, sheetUrl:d.sheetUrl }, null, 2);
+    mime = 'application/json'; ext = 'json';
+
+  } else if (fmt === 'md') {
+    content = '# AI Workspace -- System Context\n' +
+      '_Exported: ' + d.exportedAt + '_\n\n' +
+      '---\n\n' +
+      '## Sheet URL\n' + (d.sheetUrl || '\uff08\u672a\u5165\u529b\uff09') + '\n\n' +
+      '---\n\n' +
+      '## HTML Context\n\n' + d.htmlContext + '\n\n' +
+      '---\n\n' +
+      '## Image Context\n\n' + d.imgContext + '\n';
+    mime = 'text/markdown'; ext = 'md';
+
+  } else if (fmt === 'txt') {
+    const sep = '------------------------------------------------------------\n';
+    content = 'AI Workspace -- System Context\n' +
+      'Exported: ' + d.exportedAt + '\n' +
+      '============================================================\n\n' +
+      'SHEET URL\n' + sep + (d.sheetUrl || '\uff08\u672a\u5165\u529b\uff09') + '\n\n' +
+      'HTML CONTEXT\n' + sep + d.htmlContext + '\n\n' +
+      'IMAGE CONTEXT\n' + sep + d.imgContext + '\n';
+    mime = 'text/plain'; ext = 'txt';
+
+  } else if (fmt === 'pdf') {
+    printHtmlBlob(buildCtxPdfHtml(d), 'ai-workspace-context-' + date);
+    return;
+  }
+
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'gemini-context-' + new Date().toISOString().slice(0,10) + '.json';
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = 'ai-workspace-context-' + date + '.' + ext;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+function triggerImport(fmt) {
+  document.getElementById('ctx-import-menu').style.display = 'none';
+  const input = document.getElementById('ctx-import-input');
+  input.dataset.fmt = fmt;
+  input.click();
 }
 
 function importContexts(e) {
   const file = e.target.files[0];
   if (!file) return;
+  const fmt = e.target.dataset.fmt || 'json';
   const reader = new FileReader();
   reader.onload = ev => {
+    const raw = ev.target.result;
     try {
-      const data = JSON.parse(ev.target.result);
-      if (data.htmlContext !== undefined) document.getElementById('html-ctx').value = data.htmlContext;
-      if (data.imgContext  !== undefined) document.getElementById('img-ctx').value  = data.imgContext;
-      if (data.sheetUrl    !== undefined) { document.getElementById('sheet-url').value = data.sheetUrl; updateSheetLink(data.sheetUrl); }
+      if (fmt === 'json') {
+        const data = JSON.parse(raw);
+        if (data.htmlContext !== undefined) document.getElementById('html-ctx').value = data.htmlContext;
+        if (data.imgContext  !== undefined) document.getElementById('img-ctx').value  = data.imgContext;
+        if (data.sheetUrl    !== undefined) { document.getElementById('sheet-url').value = data.sheetUrl; updateSheetLink(data.sheetUrl); }
+
+      } else if (fmt === 'md') {
+        const htmlMatch = raw.match(/## HTML Context[\s\S]*?\n([\s\S]*?)(?=\n---|\n## |$)/);
+        const imgMatch  = raw.match(/## Image Context[\s\S]*?\n([\s\S]*?)(?=\n---|\n## |$)/);
+        const urlMatch  = raw.match(/## Sheet URL\s*\n([^\n]+)/);
+        if (htmlMatch) document.getElementById('html-ctx').value = htmlMatch[1].trim();
+        if (imgMatch)  document.getElementById('img-ctx').value  = imgMatch[1].trim();
+        if (urlMatch)  { document.getElementById('sheet-url').value = urlMatch[1].trim(); updateSheetLink(urlMatch[1].trim()); }
+
+      } else if (fmt === 'txt') {
+        const htmlMatch = raw.match(/HTML CONTEXT\n-+\n([\s\S]*?)(?=\n[A-Z ]+\n-+|$)/);
+        const imgMatch  = raw.match(/IMAGE CONTEXT\n-+\n([\s\S]*?)(?=\n[A-Z ]+\n-+|$)/);
+        const urlMatch  = raw.match(/SHEET URL\n-+\n([^\n]+)/);
+        if (htmlMatch) document.getElementById('html-ctx').value = htmlMatch[1].trim();
+        if (imgMatch)  document.getElementById('img-ctx').value  = imgMatch[1].trim();
+        if (urlMatch)  { document.getElementById('sheet-url').value = urlMatch[1].trim(); updateSheetLink(urlMatch[1].trim()); }
+      }
       saveContexts();
+      showSavedBadge();
     } catch(err) {
-      alert('Invalid file. Please import a valid context .json file.');
+      alert('Could not parse the file. Make sure it was exported from this app.');
     }
   };
   reader.readAsText(file);
   e.target.value = '';
+  e.target.dataset.fmt = '';
 }
 
 const DEFAULT_HTML_CTX = document.getElementById('html-ctx').value;
@@ -1436,7 +1562,7 @@ function copyResult(id) {
   });
 }
 
-// ── Batch timer ───────────────────────────────────────────
+// - Batch timer -
 function startBatchTimer() {
   batchStartTime = Date.now();
   const el = document.getElementById('batch-timer');
@@ -1465,7 +1591,7 @@ function stopBatchTimer() {
   }
 }
 
-// ── Sheet connect & fetch ──────────────────────────────────
+// - Sheet connect & fetch -
 async function connectSheet() {
   const url = document.getElementById('sheet-url').value.trim();
   if (!url) { alert('Please paste a Google Sheet URL first.'); return; }
@@ -1496,7 +1622,7 @@ async function fetchSheetTabs(spreadsheetId) {
     const data = await res.json();
     const tabs = data.sheets.map(s => s.properties.title);
     const sel = document.getElementById('sheet-tab-select');
-    sel.innerHTML = '<option value="">— select customer tab —</option>';
+    sel.innerHTML = '<option value="">-- select customer tab --</option>';
     tabs.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t; opt.textContent = t;
@@ -1544,7 +1670,7 @@ function setSheetStatus(type, msg) {
   el.textContent = msg;
 }
 
-// ── Export menu ────────────────────────────────────────
+// - Export menu -
 function toggleExportMenu(id, e) {
   e.stopPropagation();
   const menu = document.getElementById('expmenu-'+id);
@@ -1557,7 +1683,79 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
 });
 
-// ── PDF download ───────────────────────────────────────
+// - PDF helpers -
+function printHtmlBlob(htmlStr, title) {
+  const blob = new Blob([htmlStr], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (!win) { alert('Pop-up blocked. Please allow pop-ups for this page.'); URL.revokeObjectURL(url); return; }
+  win.addEventListener('load', () => {
+    win.document.title = title;
+    win.focus();
+    win.print();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildCtxPdfHtml(d) {
+  return [
+    '<!DOCTYPE html>',
+    '<html lang="ja"><head><meta charset="UTF-8">',
+    '<title>AI Workspace Context</title>',
+    '<style>',
+    'body{font-family:Hiragino Sans,"Yu Gothic",sans-serif;font-size:12px;line-height:1.8;color:#111;padding:32px 40px;}',
+    'h1{font-size:16px;font-weight:700;border-bottom:2px solid #7c6af7;padding-bottom:6px;margin-bottom:4px;}',
+    '.meta{font-size:10px;color:#888;margin-bottom:20px;}',
+    'h2{font-size:13px;font-weight:700;margin:20px 0 4px;color:#3d2db5;}',
+    'pre{background:#f5f5fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-size:11px;white-space:pre-wrap;word-break:break-word;font-family:monospace;}',
+    '.url{font-family:monospace;font-size:11px;color:#7c6af7;word-break:break-all;}',
+    '@media print{body{padding:16px;}}',
+    '</style></head><body>',
+    '<h1>AI Workspace -- System Context</h1>',
+    '<div class="meta">Exported: ' + esc(d.exportedAt) + '</div>',
+    '<h2>Sheet URL</h2>',
+    '<div class="url">' + esc(d.sheetUrl || '（未入力）') + '</div>',
+    '<h2>HTML Context</h2>',
+    '<pre>' + esc(d.htmlContext) + '</pre>',
+    '<h2>Image Context</h2>',
+    '<pre>' + esc(d.imgContext) + '</pre>',
+    '</body></html>'
+  ].join('\n');
+}
+
+function buildResultPdfHtml(filename, metaLine, bodySection) {
+  return [
+    '<!DOCTYPE html>',
+    '<html lang="ja"><head><meta charset="UTF-8">',
+    '<style>',
+    '@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap);',
+    '* { box-sizing:border-box; margin:0; padding:0; }',
+    'body { font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif; font-size:12px; line-height:1.8; color:#1a1a1a; padding:32px 40px; }',
+    'h1 { font-size:16px; font-weight:600; border-bottom:2px solid #7c6af7; padding-bottom:8px; margin-bottom:4px; }',
+    '.meta { font-size:11px; color:#666; margin-bottom:24px; }',
+    'table { width:100%; border-collapse:collapse; margin:12px 0; }',
+    'th { background:#f0effe; color:#3d2db5; font-weight:600; padding:8px 10px; text-align:left; border:1px solid #c5bef9; font-size:11px; }',
+    'td { padding:8px 10px; border:1px solid #e0ddf9; vertical-align:top; font-size:11px; line-height:1.7; }',
+    'tr:nth-child(even) td { background:#faf9ff; }',
+    'p { margin:8px 0; }',
+    'h2,h3 { font-size:13px; font-weight:600; margin:16px 0 4px; }',
+    'ul,ol { margin:6px 0 6px 18px; }',
+    'li { margin:3px 0; }',
+    '.no-issue { color:#0f6e56; font-weight:600; font-size:14px; padding:16px; background:#e1f5ee; border-radius:8px; }',
+    '@media print { body { padding:16px; } }',
+    '</style></head><body>',
+    '<h1>' + esc(filename) + '</h1>',
+    '<div class="meta">' + esc(metaLine) + '</div>',
+    bodySection,
+    '</body></html>'
+  ].join('\n');
+}
+
+// - PDF download -
 function downloadPDF(id, filename) {
   document.querySelectorAll('.export-menu').forEach(m => m.style.display = 'none');
   const r = results[id]; if (!r) return;
@@ -1579,45 +1777,12 @@ function downloadPDF(id, filename) {
 
   const metaLine = type + (time ? ' · ' + time : '') + ' · Generated by Gemini Workspace';
   const bodySection = r.text.trim() === '問題なし'
-    ? '<div class="no-issue">&#10003; &#21839;&#39006;&#12394;&#12375;</div>'
+    ? '<div class="no-issue">&#10003; 問題なし</div>'
     : bodyContent;
-
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<style>' +
-    '@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap);' +
-    '* { box-sizing: border-box; margin: 0; padding: 0; }' +
-    'body { font-family: Noto Sans JP, Hiragino Sans, Yu Gothic, sans-serif; font-size: 12px; line-height: 1.8; color: #1a1a1a; padding: 32px 40px; }' +
-    'h1 { font-size: 16px; font-weight: 600; border-bottom: 2px solid #7c6af7; padding-bottom: 8px; margin-bottom: 4px; color: #1a1a1a; }' +
-    '.meta { font-size: 11px; color: #666; margin-bottom: 24px; }' +
-    'table { width: 100%; border-collapse: collapse; margin: 12px 0; }' +
-    'th { background: #f0effe; color: #3d2db5; font-weight: 600; padding: 8px 10px; text-align: left; border: 1px solid #c5bef9; font-size: 11px; }' +
-    'td { padding: 8px 10px; border: 1px solid #e0ddf9; vertical-align: top; font-size: 11px; line-height: 1.7; }' +
-    'tr:nth-child(even) td { background: #faf9ff; }' +
-    'p { margin: 8px 0; }' +
-    'h2, h3 { font-size: 13px; font-weight: 600; margin: 16px 0 4px; }' +
-    'ul, ol { margin: 6px 0 6px 18px; }' +
-    'li { margin: 3px 0; }' +
-    '.no-issue { color: #0f6e56; font-weight: 600; font-size: 14px; padding: 16px; background: #e1f5ee; border-radius: 8px; }' +
-    '@media print { body { padding: 16px; } }' +
-    '<\/style>' +
-    '<\/head><body>' +
-    '<h1>' + filename + '<\/h1>' +
-    '<div class="meta">' + metaLine + '<\/div>' +
-    bodySection +
-    '<\/body><\/html>';
-
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => {
-    win.focus();
-    win.print();
-    // After print dialog, title drives the filename in most browsers
-    win.document.title = safe + '-result';
-  };
+  printHtmlBlob(buildResultPdfHtml(filename, metaLine, bodySection), safe + '-result');
 }
 
-// ── Google Sheets export ───────────────────────────────
+// - Google Sheets export -
 let gsToken = null;
 
 function exportToSheets(id, filename) {
@@ -1660,8 +1825,8 @@ function doAuthorize(callback) {
       'Google Sheets export requires a Google OAuth Client ID.\n\n' +
       'Steps to get one (free):\n' +
       '1. Go to console.cloud.google.com\n' +
-      '2. Create a project → Enable "Google Sheets API"\n' +
-      '3. Credentials → Create OAuth 2.0 Client ID (Web Application)\n' +
+      '2. Create a project -> Enable "Google Sheets API"\n' +
+      '3. Credentials -> Create OAuth 2.0 Client ID (Web Application)\n' +
       '4. Add this page URL to "Authorized JavaScript origins"\n\n' +
       'Paste your Client ID here:'
     );
@@ -1758,7 +1923,7 @@ function buildSheetRows(text, filename, type, time) {
   const sepLines   = tableLines.filter(l => /^\|[\s\-|]+\|$/.test(l.trim()));
 
   if (tableLines.length >= 3 && sepLines.length >= 1) {
-    // Has markdown table — extract header + data rows
+    // Has markdown table -- extract header + data rows
     const nonSep = tableLines.filter(l => !/^\|[\s\-|]+\|$/.test(l.trim()));
     const parsed = nonSep.map(l => l.trim().slice(1,-1).split('|').map(c => c.trim()));
     const rows = [];
@@ -1769,7 +1934,7 @@ function buildSheetRows(text, filename, type, time) {
     parsed.forEach(row => rows.push(row));
     return rows;
   } else {
-    // Plain text — dump as single column
+    // Plain text -- dump as single column
     const rows = [[filename, type, time], []];
     lines.forEach(l => rows.push([l]));
     return rows;
@@ -1783,7 +1948,7 @@ function showExportSuccess(id, sheetUrl) {
   if (existing) existing.remove();
   const bar = document.createElement('div');
   bar.className = 'export-success';
-  bar.innerHTML = '✓ Saved to Google Sheets — <a href="' + sheetUrl + '" target="_blank">Open Sheet ↗</a>';
+  bar.innerHTML = '✓ Saved to Google Sheets -- <a href="' + sheetUrl + '" target="_blank">Open Sheet ↗</a>';
   card.appendChild(bar);
   setTimeout(() => bar.remove(), 6000);
 }
@@ -1792,7 +1957,7 @@ function refreshResultsSection() {
   document.getElementById('results-section').style.display = Object.keys(results).length ? 'flex' : 'none';
 }
 
-// ── Save Markdown ──────────────────────────────────────
+// - Save Markdown -
 function saveMarkdown() {
   const done = files.filter(f => results[f.id]);
   if (!done.length) { alert('No results to save yet.'); return; }
