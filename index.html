@@ -206,6 +206,9 @@ input[type="file"] { display: none; }
 .export-menu button + button { border-top:1px solid var(--border); }
 .export-success { padding:10px 16px; font-size:12px; color:var(--green); background:var(--green-d); border-top:1px solid var(--border); }
 .export-success a { color:var(--green); font-weight:600; }
+.rerun-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.1s; flex-shrink: 0; }
+.rerun-btn:hover { color: var(--accent); }
+.rerun-btn.spinning svg { animation: spin 0.65s linear infinite; }
 .del-result-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.1s; flex-shrink: 0; }
 .del-result-btn:hover { color: var(--red); }
 .copy-btn:hover { background: var(--bg4); color: var(--text); }
@@ -1157,6 +1160,14 @@ function createResultCard(f) {
   expWrap.appendChild(expBtn);
   expWrap.appendChild(expMenu);
 
+  const rerunBtn = document.createElement('button');
+  rerunBtn.className = 'rerun-btn';
+  rerunBtn.id = 'rerunbtn-' + f.id;
+  rerunBtn.title = 'Re-run this file';
+  rerunBtn.style.display = 'none';
+  rerunBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>';
+  rerunBtn.addEventListener('click', function() { rerunFile(f.id); });
+
   const delBtn = document.createElement('button');
   delBtn.className = 'del-result-btn';
   delBtn.id = 'delbtn-' + f.id;
@@ -1170,6 +1181,7 @@ function createResultCard(f) {
   hdr.appendChild(badge);
   hdr.appendChild(timeEl);
   hdr.appendChild(copyBtn);
+  hdr.appendChild(rerunBtn);
   hdr.appendChild(expWrap);
   hdr.appendChild(delBtn);
 
@@ -1185,11 +1197,19 @@ function createResultCard(f) {
 
 function setResultDot(id, st) {
   const d = document.getElementById('rdot-'+id); if (d) d.className = 'result-dot ' + st;
+  const finished = ['done','error','stopped'].includes(st);
+  // Show/hide rerun button
+  const rerunBtn = document.getElementById('rerunbtn-'+id);
+  if (rerunBtn) {
+    rerunBtn.style.display = finished ? '' : 'none';
+    rerunBtn.classList.remove('spinning');
+  }
   // Show delete button once finished
   const delBtn = document.getElementById('delbtn-'+id);
-  if (delBtn && ['done','error','stopped'].includes(st)) delBtn.style.display = '';
+  if (delBtn) delBtn.style.display = finished ? '' : 'none';
+  // Show export only on done
   const expWrap = document.getElementById('expwrap-'+id);
-  if (expWrap && st === 'done') expWrap.style.display = '';
+  if (expWrap) expWrap.style.display = (st === 'done') ? '' : 'none';
 }
 
 function deleteResult(id) {
@@ -1201,6 +1221,39 @@ function deleteResult(id) {
   if (!document.querySelectorAll('.result-card').length) {
     document.getElementById('results-section').style.display = 'none';
   }
+}
+
+async function rerunFile(id) {
+  const key = getActiveKey();
+  if (!key) { alert('Please enter your API key first.'); return; }
+
+  const f = files.find(f => f.id === id);
+  if (!f) return;
+
+  // Reset state
+  delete results[id];
+  f.status = 'pending';
+
+  // Reset card UI
+  const rerunBtn = document.getElementById('rerunbtn-'+id);
+  if (rerunBtn) rerunBtn.classList.add('spinning');
+  setResultDot(id, 'running');
+  setResultBody(id, 'Waiting for Gemini…', 'loading');
+  const timeEl = document.getElementById('rtime-'+id);
+  if (timeEl) timeEl.innerHTML = '';
+
+  // Hide export + delete while running
+  const expWrap = document.getElementById('expwrap-'+id);
+  if (expWrap) expWrap.style.display = 'none';
+  const delBtn = document.getElementById('delbtn-'+id);
+  if (delBtn) delBtn.style.display = 'none';
+
+  renderQueue();
+  updateRunBtn();
+
+  // Run just this file
+  await processFile(f, key);
+  updateRunBtn();
 }
 
 // ── Context persistence ────────────────────────────────
