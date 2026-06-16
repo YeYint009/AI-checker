@@ -1701,59 +1701,58 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function makePdfDoc(title, metaText, bodyHtml) {
+  // Build PDF HTML safely using DOM - no HTML tags in JS strings
+  const doc = document.implementation.createHTMLDocument(title);
+  const st = doc.createElement('style');
+  st.textContent = [
+    '@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap)',
+    '* { box-sizing:border-box; margin:0; padding:0 }',
+    'body { font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif; font-size:12px; line-height:1.8; color:#1a1a1a; padding:32px 40px }',
+    'h1 { font-size:16px; font-weight:600; border-bottom:2px solid #7c6af7; padding-bottom:8px; margin-bottom:4px }',
+    '.meta { font-size:11px; color:#666; margin-bottom:24px }',
+    'h2 { font-size:13px; font-weight:700; margin:20px 0 4px; color:#3d2db5 }',
+    'pre { background:#f5f5fa; border:1px solid #ddd; border-radius:6px; padding:12px; font-size:11px; white-space:pre-wrap; word-break:break-word; font-family:monospace }',
+    '.url { font-family:monospace; font-size:11px; color:#7c6af7; word-break:break-all }',
+    'table { width:100%; border-collapse:collapse; margin:12px 0 }',
+    'th { background:#f0effe; color:#3d2db5; font-weight:600; padding:8px 10px; text-align:left; border:1px solid #c5bef9; font-size:11px }',
+    'td { padding:8px 10px; border:1px solid #e0ddf9; vertical-align:top; font-size:11px; line-height:1.7 }',
+    'tr:nth-child(even) td { background:#faf9ff }',
+    'p { margin:8px 0 }',
+    'ul,ol { margin:6px 0 6px 18px }',
+    'li { margin:3px 0 }',
+    '.no-issue { color:#0f6e56; font-weight:600; font-size:14px; padding:16px; background:#e1f5ee; border-radius:8px }',
+    '@media print { body { padding:16px } }'
+  ].join(';');
+  doc.head.appendChild(st);
+  const h1 = doc.createElement('h1');
+  h1.textContent = title;
+  const meta = doc.createElement('div');
+  meta.className = 'meta';
+  meta.textContent = metaText;
+  const body2 = doc.createElement('div');
+  body2.innerHTML = bodyHtml;
+  doc.body.appendChild(h1);
+  doc.body.appendChild(meta);
+  doc.body.appendChild(body2);
+  return '<!DOC' + 'TYPE html>' + doc.documentElement.outerHTML;
+}
+
 function buildCtxPdfHtml(d) {
-  return [
-    '<!DOCTYPE html>',
-    '<html lang="ja"><head><meta charset="UTF-8">',
-    '<title>AI Workspace Context</title>',
-    '<style>',
-    'body{font-family:Hiragino Sans,"Yu Gothic",sans-serif;font-size:12px;line-height:1.8;color:#111;padding:32px 40px;}',
-    'h1{font-size:16px;font-weight:700;border-bottom:2px solid #7c6af7;padding-bottom:6px;margin-bottom:4px;}',
-    '.meta{font-size:10px;color:#888;margin-bottom:20px;}',
-    'h2{font-size:13px;font-weight:700;margin:20px 0 4px;color:#3d2db5;}',
-    'pre{background:#f5f5fa;border:1px solid #ddd;border-radius:6px;padding:12px;font-size:11px;white-space:pre-wrap;word-break:break-word;font-family:monospace;}',
-    '.url{font-family:monospace;font-size:11px;color:#7c6af7;word-break:break-all;}',
-    '@media print{body{padding:16px;}}',
-    '</style></head><body>',
-    '<h1>AI Workspace -- System Context</h1>',
-    '<div class="meta">Exported: ' + esc(d.exportedAt) + '</div>',
-    '<h2>Sheet URL</h2>',
-    '<div class="url">' + esc(d.sheetUrl || '（未入力）') + '</div>',
-    '<h2>HTML Context</h2>',
-    '<pre>' + esc(d.htmlContext) + '</pre>',
-    '<h2>Image Context</h2>',
-    '<pre>' + esc(d.imgContext) + '</pre>',
-    '</body></html>'
-  ].join('\n');
+  const url = doc => { const el = doc.createElement('div'); el.className='url'; el.textContent = d.sheetUrl || '\u672a\u5165\u529b'; return el.outerHTML; };
+  const pre = (doc, text) => { const el = doc.createElement('pre'); el.textContent = text; return el.outerHTML; };
+  const doc = document.implementation.createHTMLDocument('');
+  const bodyHtml =
+    '<h2>Sheet URL</h2>' + url(doc) +
+    '<h2>HTML Context</h2>' + pre(doc, d.htmlContext) +
+    '<h2>Image Context</h2>' + pre(doc, d.imgContext);
+  return makePdfDoc('AI Workspace - System Context', 'Exported: ' + d.exportedAt, bodyHtml);
 }
 
 function buildResultPdfHtml(filename, metaLine, bodySection) {
-  return [
-    '<!DOCTYPE html>',
-    '<html lang="ja"><head><meta charset="UTF-8">',
-    '<style>',
-    '@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap);',
-    '* { box-sizing:border-box; margin:0; padding:0; }',
-    'body { font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif; font-size:12px; line-height:1.8; color:#1a1a1a; padding:32px 40px; }',
-    'h1 { font-size:16px; font-weight:600; border-bottom:2px solid #7c6af7; padding-bottom:8px; margin-bottom:4px; }',
-    '.meta { font-size:11px; color:#666; margin-bottom:24px; }',
-    'table { width:100%; border-collapse:collapse; margin:12px 0; }',
-    'th { background:#f0effe; color:#3d2db5; font-weight:600; padding:8px 10px; text-align:left; border:1px solid #c5bef9; font-size:11px; }',
-    'td { padding:8px 10px; border:1px solid #e0ddf9; vertical-align:top; font-size:11px; line-height:1.7; }',
-    'tr:nth-child(even) td { background:#faf9ff; }',
-    'p { margin:8px 0; }',
-    'h2,h3 { font-size:13px; font-weight:600; margin:16px 0 4px; }',
-    'ul,ol { margin:6px 0 6px 18px; }',
-    'li { margin:3px 0; }',
-    '.no-issue { color:#0f6e56; font-weight:600; font-size:14px; padding:16px; background:#e1f5ee; border-radius:8px; }',
-    '@media print { body { padding:16px; } }',
-    '</style></head><body>',
-    '<h1>' + esc(filename) + '</h1>',
-    '<div class="meta">' + esc(metaLine) + '</div>',
-    bodySection,
-    '</body></html>'
-  ].join('\n');
+  return makePdfDoc(filename, metaLine, bodySection);
 }
+
 
 // - PDF download -
 function downloadPDF(id, filename) {
