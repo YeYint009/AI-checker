@@ -78,12 +78,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
 .ctx-action-btn:hover { background:var(--bg4); color:var(--text); }
 .ctx-action-btn.danger { color:var(--red); border-color:var(--red); background:var(--red-d); }
 .ctx-action-btn.danger:hover { opacity:0.8; }
-.ctx-export-wrap { position:relative; }
-.ctx-export-menu { display:none; position:absolute; right:0; top:calc(100% + 4px); background:var(--bg2); border:1px solid var(--border2); border-radius:var(--r); overflow:hidden; z-index:200; min-width:150px; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-.ctx-export-menu button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 14px; font-size:12px; color:var(--text2); background:none; border:none; cursor:pointer; text-align:left; transition:background 0.1s; white-space:nowrap; }
-.ctx-export-menu button:hover { background:var(--bg3); color:var(--text); }
-.ctx-export-menu button + button { border-top:1px solid var(--border); }
-.ctx-export-menu .menu-divider { height:1px; background:var(--border); margin:2px 0; }
+
 
 /* Textarea */
 textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 12.5px; line-height: 1.6; padding: 10px 12px; resize: vertical; font-family: inherit; outline: none; transition: border-color 0.15s; }
@@ -372,52 +367,16 @@ input[type="file"] { display: none; }
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
           Save
         </button>
-        <!-- Export dropdown -->
-        <div class="ctx-export-wrap" id="ctx-export-wrap">
-          <button class="ctx-action-btn" onclick="toggleCtxExportMenu(event)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="ctx-export-menu" id="ctx-export-menu">
-            <button onclick="exportContextsAs('json')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              JSON (.json)
-            </button>
-            <button onclick="exportContextsAs('md')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Markdown (.md)
-            </button>
-            <button onclick="exportContextsAs('txt')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              Plain text (.txt)
-            </button>
-            <button onclick="exportContextsAs('pdf')">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              PDF (print)
-            </button>
-          </div>
-        </div>
-
-        <!-- Import dropdown -->
-        <div class="ctx-export-wrap" id="ctx-import-wrap">
-          <button class="ctx-action-btn" onclick="toggleCtxImportMenu(event)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Import
-            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="ctx-export-menu" id="ctx-import-menu">
-            <button onclick="triggerImport('json')">JSON (.json)</button>
-            <button onclick="triggerImport('md')">Markdown (.md)</button>
-            <button onclick="triggerImport('txt')">Plain text (.txt)</button>
-          </div>
-        </div>
-
-        <button class="ctx-action-btn danger" onclick="resetContexts()" title="Reset to default">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-          Reset
+        <!-- Save / Load context as txt -->
+        <button class="ctx-action-btn" onclick="saveContextAsTxt()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save .txt
         </button>
-        <input type="file" id="ctx-import-input" accept=".json,.md,.txt,.markdown" style="display:none" onchange="importContexts(event)" />
+        <button class="ctx-action-btn" onclick="document.getElementById('ctx-load-input').click()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Load .txt
+        </button>
+        <input type="file" id="ctx-load-input" accept=".txt" style="display:none" onchange="loadContextFromTxt(event)" />
       </div>
     </div>
     <div class="card-body">
@@ -1339,127 +1298,57 @@ function showSavedBadge() {
   badge._timer = setTimeout(() => badge.style.display = 'none', 2000);
 }
 
-// - Context export dropdown -
-function toggleCtxExportMenu(e) {
-  e.stopPropagation();
-  const m = document.getElementById('ctx-export-menu');
-  const im = document.getElementById('ctx-import-menu');
-  im.style.display = 'none';
-  m.style.display = m.style.display === 'none' ? '' : 'none';
-}
-function toggleCtxImportMenu(e) {
-  e.stopPropagation();
-  const m = document.getElementById('ctx-import-menu');
-  const em = document.getElementById('ctx-export-menu');
-  em.style.display = 'none';
-  m.style.display = m.style.display === 'none' ? '' : 'none';
-}
-document.addEventListener('click', () => {
-  const em = document.getElementById('ctx-export-menu');
-  const im = document.getElementById('ctx-import-menu');
-  if (em) em.style.display = 'none';
-  if (im) im.style.display = 'none';
-});
-
-function getCtxData() {
-  return {
-    htmlContext: document.getElementById('html-ctx').value,
-    imgContext:  document.getElementById('img-ctx').value,
-    sheetUrl:    document.getElementById('sheet-url').value,
-    exportedAt:  new Date().toISOString()
-  };
-}
-
-function exportContextsAs(fmt) {
-  document.getElementById('ctx-export-menu').style.display = 'none';
-  const d = getCtxData();
-  const date = new Date().toISOString().slice(0,10);
-  let content, mime, ext;
-
-  if (fmt === 'json') {
-    content = JSON.stringify({ version:1, exportedAt:d.exportedAt, htmlContext:d.htmlContext, imgContext:d.imgContext, sheetUrl:d.sheetUrl }, null, 2);
-    mime = 'application/json'; ext = 'json';
-
-  } else if (fmt === 'md') {
-    content = '# AI Workspace -- System Context\n' +
-      '_Exported: ' + d.exportedAt + '_\n\n' +
-      '---\n\n' +
-      '## Sheet URL\n' + (d.sheetUrl || '\uff08\u672a\u5165\u529b\uff09') + '\n\n' +
-      '---\n\n' +
-      '## HTML Context\n\n' + d.htmlContext + '\n\n' +
-      '---\n\n' +
-      '## Image Context\n\n' + d.imgContext + '\n';
-    mime = 'text/markdown'; ext = 'md';
-
-  } else if (fmt === 'txt') {
-    const sep = '------------------------------------------------------------\n';
-    content = 'AI Workspace -- System Context\n' +
-      'Exported: ' + d.exportedAt + '\n' +
-      '============================================================\n\n' +
-      'SHEET URL\n' + sep + (d.sheetUrl || '\uff08\u672a\u5165\u529b\uff09') + '\n\n' +
-      'HTML CONTEXT\n' + sep + d.htmlContext + '\n\n' +
-      'IMAGE CONTEXT\n' + sep + d.imgContext + '\n';
-    mime = 'text/plain'; ext = 'txt';
-
-  } else if (fmt === 'pdf') {
-    printHtmlBlob(buildCtxPdfHtml(d), 'ai-workspace-context-' + date);
-    return;
-  }
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
-  a.download = 'ai-workspace-context-' + date + '.' + ext;
+// - Context save / load as .txt -
+function saveContextAsTxt() {
+  var htmlCtx  = document.getElementById('html-ctx').value;
+  var imgCtx   = document.getElementById('img-ctx').value;
+  var sheetUrl = document.getElementById('sheet-url').value;
+  var sep = '============================================================';
+  var nl  = '\n';
+  var txt = 'AI Workspace - System Context' + nl
+          + 'Saved: ' + new Date().toLocaleString() + nl
+          + sep + nl + nl
+          + 'SHEET_URL' + nl + (sheetUrl || '') + nl + nl
+          + sep + nl + nl
+          + 'HTML_CONTEXT' + nl + htmlCtx + nl + nl
+          + sep + nl + nl
+          + 'IMAGE_CONTEXT' + nl + imgCtx + nl;
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }));
+  a.download = 'ai-workspace-context-' + new Date().toISOString().slice(0,10) + '.txt';
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-function triggerImport(fmt) {
-  document.getElementById('ctx-import-menu').style.display = 'none';
-  const input = document.getElementById('ctx-import-input');
-  input.dataset.fmt = fmt;
-  input.click();
-}
-
-function importContexts(e) {
+function loadContextFromTxt(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const fmt = e.target.dataset.fmt || 'json';
   const reader = new FileReader();
   reader.onload = ev => {
-    const raw = ev.target.result;
-    try {
-      if (fmt === 'json') {
-        const data = JSON.parse(raw);
-        if (data.htmlContext !== undefined) document.getElementById('html-ctx').value = data.htmlContext;
-        if (data.imgContext  !== undefined) document.getElementById('img-ctx').value  = data.imgContext;
-        if (data.sheetUrl    !== undefined) { document.getElementById('sheet-url').value = data.sheetUrl; updateSheetLink(data.sheetUrl); }
-
-      } else if (fmt === 'md') {
-        const htmlMatch = raw.match(/## HTML Context[\s\S]*?\n([\s\S]*?)(?=\n---|\n## |$)/);
-        const imgMatch  = raw.match(/## Image Context[\s\S]*?\n([\s\S]*?)(?=\n---|\n## |$)/);
-        const urlMatch  = raw.match(/## Sheet URL\s*\n([^\n]+)/);
-        if (htmlMatch) document.getElementById('html-ctx').value = htmlMatch[1].trim();
-        if (imgMatch)  document.getElementById('img-ctx').value  = imgMatch[1].trim();
-        if (urlMatch)  { document.getElementById('sheet-url').value = urlMatch[1].trim(); updateSheetLink(urlMatch[1].trim()); }
-
-      } else if (fmt === 'txt') {
-        const htmlMatch = raw.match(/HTML CONTEXT\n-+\n([\s\S]*?)(?=\n[A-Z ]+\n-+|$)/);
-        const imgMatch  = raw.match(/IMAGE CONTEXT\n-+\n([\s\S]*?)(?=\n[A-Z ]+\n-+|$)/);
-        const urlMatch  = raw.match(/SHEET URL\n-+\n([^\n]+)/);
-        if (htmlMatch) document.getElementById('html-ctx').value = htmlMatch[1].trim();
-        if (imgMatch)  document.getElementById('img-ctx').value  = imgMatch[1].trim();
-        if (urlMatch)  { document.getElementById('sheet-url').value = urlMatch[1].trim(); updateSheetLink(urlMatch[1].trim()); }
+    const txt = ev.target.result;
+    const sep = '='.repeat(60);
+    const parts = txt.split(sep);
+    // parts[0] = header, parts[1] = SHEET_URL section, parts[2] = HTML_CONTEXT, parts[3] = IMAGE_CONTEXT
+    parts.forEach(part => {
+      const trimmed = part.trim();
+      if (trimmed.startsWith('SHEET_URL')) {
+        const val = trimmed.replace(/^SHEET_URL[\s\S]*?\n/, '').trim();
+        if (val) { document.getElementById('sheet-url').value = val; updateSheetLink(val); }
+      } else if (trimmed.startsWith('HTML_CONTEXT')) {
+        const val = trimmed.replace(/^HTML_CONTEXT[\s\S]*?\n/, '').trim();
+        document.getElementById('html-ctx').value = val;
+      } else if (trimmed.startsWith('IMAGE_CONTEXT')) {
+        const val = trimmed.replace(/^IMAGE_CONTEXT[\s\S]*?\n/, '').trim();
+        document.getElementById('img-ctx').value = val;
       }
-      saveContexts();
-      showSavedBadge();
-    } catch(err) {
-      alert('Could not parse the file. Make sure it was exported from this app.');
-    }
+    });
+    saveContexts();
+    showSavedBadge();
   };
   reader.readAsText(file);
   e.target.value = '';
-  e.target.dataset.fmt = '';
 }
+
 
 const DEFAULT_HTML_CTX = document.getElementById('html-ctx').value;
 const DEFAULT_IMG_CTX  = document.getElementById('img-ctx').value;
